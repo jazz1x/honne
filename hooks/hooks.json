@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/index-session.sh\" --jsonl \"${CLAUDE_TRANSCRIPT_PATH}\" --out \"${CLAUDE_PROJECT_DIR}/.honne/cache/index.json\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
