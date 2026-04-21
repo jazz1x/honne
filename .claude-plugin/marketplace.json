@@ -1,0 +1,13 @@
+{
+  "name": "honne",
+  "owner": { "name": "jazz1x", "url": "https://github.com/jazz1x" },
+  "plugins": [
+    {
+      "name": "honne",
+      "source": ".",
+      "description": "Self-observation from LLM transcripts. Find your honne beneath tatemae.",
+      "version": "0.0.1",
+      "keywords": ["self-observation", "transcripts", "persona"]
+    }
+  ]
+}

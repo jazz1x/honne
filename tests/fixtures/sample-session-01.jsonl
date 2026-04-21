@@ -1,0 +1,7 @@
+{"sessionId":"test-session-001","cwd":"/Users/test/project","ts":"2026-04-20T10:00:00Z","timezone":"UTC"}
+{"role":"user","text":"넹넹이 이게 뭐지? ㅇㅇ","ts":"2026-04-20T10:00:30Z"}
+{"role":"assistant","text":"이건 좋아 보이네요. 커밋하면 될 것 같습니다.","ts":"2026-04-20T10:01:00Z"}
+{"role":"user","text":"ㅇㅇ 맞아, 이렇게 하면 좋을 것 같은데","ts":"2026-04-20T10:01:30Z"}
+{"role":"assistant","text":"코드 리뷰 후 커밋해봅시다.","ts":"2026-04-20T10:02:00Z"}
+{"role":"user","text":"좋아요, 넹넹이 말이 맞네요","ts":"2026-04-20T10:02:30Z"}
+{"role":"assistant","text":"좋은 결정입니다.","ts":"2026-04-20T10:03:00Z"}

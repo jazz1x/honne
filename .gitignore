@@ -1,0 +1,17 @@
+# honne local data — 프라이버시
+.honne/
+
+# honne 생성 리포트 (로컬만)
+docs/honne.md
+docs/honne-compare.md
+
+# harnish 구현 상태 (자율 구현 중에만 존재, 독립성 원칙에 따라 commit 금지)
+.harnish/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
