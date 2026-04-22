@@ -1,13 +1,16 @@
 {
   "name": "honne",
-  "owner": { "name": "jazz1x", "url": "https://github.com/jazz1x" },
+  "owner": {
+    "name": "jazz1x"
+  },
+  "metadata": {
+    "description": "Self-observation from LLM transcripts. Find your honne beneath tatemae."
+  },
   "plugins": [
     {
       "name": "honne",
-      "source": ".",
-      "description": "Self-observation from LLM transcripts. Find your honne beneath tatemae.",
-      "version": "0.0.1",
-      "keywords": ["self-observation", "transcripts", "persona"]
+      "source": "./",
+      "description": "LLM 과 나눈 흔적에서 당신 자신의 패턴을 끌어냅니다 — tatemae 아래의 honne."
     }
   ]
 }
