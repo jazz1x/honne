@@ -17,7 +17,7 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 # --- 1. Shell lint (shellcheck, fallback to bash -n) ---
 echo "Shell lint"
-SH_FILES=$(echo "$STAGED_FILES" | grep '\.sh$' || true)
+SH_FILES=$(echo "$STAGED_FILES" | grep -E '\.(sh|bash)$' || true)
 if [ -n "$SH_FILES" ]; then
   if command -v shellcheck &>/dev/null; then
     for f in $SH_FILES; do
@@ -38,7 +38,7 @@ if [ -n "$SH_FILES" ]; then
     done
   fi
 else
-  pass "no .sh files staged"
+  pass "no shell (.sh/.bash) files staged"
 fi
 
 # --- 2. JSON syntax ---
@@ -89,10 +89,11 @@ else
   pass "no SKILL.md files staged"
 fi
 
-# --- 4. Script executable permission ---
+# --- 4. Script executable permission (*.sh only; .bash is sourced, .bats run by bats) ---
 echo "Script permissions"
-if [ -n "$SH_FILES" ]; then
-  for f in $SH_FILES; do
+EXEC_FILES=$(echo "$STAGED_FILES" | grep '\.sh$' || true)
+if [ -n "$EXEC_FILES" ]; then
+  for f in $EXEC_FILES; do
     if [ -x "$REPO_ROOT/$f" ]; then
       pass "$f"
     else
@@ -151,6 +152,26 @@ for i, p in enumerate(d.get("plugins", [])):
   fi
 else
   pass "marketplace.json not staged"
+fi
+
+# --- 6. Test suite (run only if scripts/tests are staged) ---
+echo "Test suite"
+TEST_TRIGGER=$(echo "$STAGED_FILES" | grep -E '^(scripts/|tests/)' || true)
+if [ -n "$TEST_TRIGGER" ]; then
+  if [ "${HONNE_SKIP_TESTS:-0}" = "1" ]; then
+    warn "HONNE_SKIP_TESTS=1 — skipping test suite (manual override)"
+  elif [ -x "$REPO_ROOT/tests/run.sh" ]; then
+    if bash "$REPO_ROOT/tests/run.sh" >/tmp/honne-pre-commit-tests.log 2>&1; then
+      pass "pytest + bats (see /tmp/honne-pre-commit-tests.log)"
+    else
+      fail "test suite failed — see /tmp/honne-pre-commit-tests.log"
+      tail -20 /tmp/honne-pre-commit-tests.log >&2
+    fi
+  else
+    warn "tests/run.sh missing — skipping"
+  fi
+else
+  pass "no scripts/ or tests/ changes staged — test run skipped"
 fi
 
 echo ""

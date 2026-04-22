@@ -84,9 +84,12 @@ teardown() {
 
 @test "pre-commit hook runs cleanly on a worktree with no staged changes" {
   # Run in a throwaway git worktree so our real repo state is unaffected.
+  # HONNE_SKIP_TESTS=1 prevents infinite recursion: pre-commit runs tests,
+  # and this test runs pre-commit — without the gate, the inner pre-commit
+  # would invoke tests/run.sh again.
   cp -R "$REPO_ROOT" "$CLAUDE_PROJECT_DIR/repo-copy"
   cd "$CLAUDE_PROJECT_DIR/repo-copy"
-  run bash scripts/pre-commit.sh
+  HONNE_SKIP_TESTS=1 run bash scripts/pre-commit.sh
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Pre-commit passed" ]]
 }
