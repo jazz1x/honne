@@ -16,7 +16,7 @@ Everything runs locally. No network calls, no analytics. Every claim is HITL-app
 
 | Skill | Command | Role |
 |-------|---------|------|
-| **honne** | `/honne:honne` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
+| **whoami** | `/honne:whoami` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
 | **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
@@ -79,7 +79,7 @@ Expected output:
 Expected output:
 
 ```
-✓ Installed honne@0.0.1 — 3 skills registered (honne, lexi, compare)
+✓ Installed honne@0.0.1 — 3 skills registered (whoami, lexi, compare)
 ```
 
 Scope choice:
@@ -98,7 +98,7 @@ Scope choice:
 You should see `honne` in the list. If the three canonical slash commands below autocomplete, you're good:
 
 ```
-/honne:honne
+/honne:whoami
 /honne:lexi
 /honne:compare
 ```
@@ -122,13 +122,13 @@ Once installed, try the fastest path end-to-end:
 
 ```
 # Inside a Claude Code session, in any project
-/honne:honne
+/honne:whoami
 ```
 
 Sample flow (simplified):
 
 ```
-user   > /honne:honne
+user   > /honne:whoami
 
 step 1 > Scan scope — repo (current project) or global (all projects)?
 user   > global
@@ -164,7 +164,7 @@ This reads only what's already on disk — no transcript re-scan, no LLM re-anal
 ### 1. First-time profile
 
 ```
-User: "나는 누구" or /honne:honne
+User: "나는 누구" or /honne:whoami
 → honne asks: scan scope — repo or global?
 → scans transcripts → extracts 6 axes → HITL per-axis (y / n / edit)
 → writes .honne/persona.json + docs/honne.md
@@ -205,7 +205,7 @@ honne registers a single hook, automatically on install. No configuration needed
 |-------|---------|--------------|
 | `SessionEnd` | Session closes | Runs `scripts/index-session.sh` — appends session metadata (id, timestamps, sha256, message count) to `.honne/cache/index.json`. **No LLM call, no context injection, no analysis.** Silent-fail. |
 
-The hook is passive infrastructure — it keeps the transcript index warm so later manual invocations of `honne` / `lexi` / `compare` run faster. Analysis is always user-initiated.
+The hook is passive infrastructure — it keeps the transcript index warm so later manual invocations of `whoami` / `lexi` / `compare` run faster. Analysis is always user-initiated.
 
 ## Your data
 

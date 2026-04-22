@@ -1,23 +1,23 @@
 ---
-name: honne
+name: whoami
 version: 0.0.1
 description: >
-  Orchestrate 6-axis self-observation from local LLM transcripts.
-  Evidence-backed persona with per-axis HITL approval.
+  ローカルLLMトランスクリプトから6軸自己観察をオーケストレートします。
+  証拠に基づくペルソナと軸ごとのHITL承認。
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
-# honne — 6-Axis Self-Observation
+# honne — 6軸自己観察
 
-## Step 1: Scope HITL
+## ステップ1: スコープHITL
 
-Ask user: "Scan scope — `repo` (current project) or `global` (all projects)?"
+ユーザーに問い合わせます: "スキャンスコープ — `repo` (現在のプロジェクト) または `global` (すべてのプロジェクト)?"
 
-Wait for explicit `repo` or `global`. Ambiguous replies → re-ask.
+明示的な `repo` または `global` を待ちます。曖昧な回答 → 再度質問します。
 
-## Step 2: Scan transcripts
+## ステップ2: トランスクリプトスキャン
 
-Run:
+実行します:
 ```bash
 HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
 bash "$HONNE_ROOT/scripts/scan-transcripts.sh" \
@@ -27,50 +27,50 @@ bash "$HONNE_ROOT/scripts/scan-transcripts.sh" \
   --redact-secrets
 ```
 
-If exit 2 (no transcripts) → report "insufficient data. change scope?" → end.
+exit 2 (トランスクリプトなし) の場合 → "十分なデータがありません。スコープを変更しますか?" を報告 → 終了します。
 
-## Step 3: Pre-HITL rejection reframe filter
+## ステップ3: HITL前の拒否リフレーム フィルター
 
-For each axis:
+各軸について:
 ```bash
 bash "$HONNE_ROOT/scripts/query-assets.sh" \
   --tag "<axis>" --type rejection --scope "$SCOPE" --out stdout
 ```
 
-Store past rejections in-memory (NOT injected). Use as "skip candidate" filter before presenting HITL claims. If a candidate claim text overlaps significantly with a past rejection, reframe or skip with a log.
+過去の拒否をメモリに格納します (注入されません)。HITL主張を提示する前に「スキップ候補」フィルターとして使用します。候補主張テキストが過去の拒否と大きく重なる場合は、リフレーム またはログとともにスキップします。
 
-## Step 4: Per-axis processing
+## ステップ4: 軸ごとの処理
 
-For axis in [lexicon, reaction, workflow, obsession, ritual, antipattern]:
-- Statistical extraction (lexicon → extract-lexicon.sh; obsession → detect-recurrence.sh; others → internal logic within this skill)
-- LLM summary (must reference evidence-gather output)
-- HITL: present claim with quotes, ask (y / n / edit). Ambiguous → re-ask.
+[語彙、反応、ワークフロー、執着、儀式、アンチパターン] の各軸に対して:
+- 統計抽出 (語彙 → extract-lexicon.sh; 執着 → detect-recurrence.sh; その他 → このスキル内の内部ロジック)
+- LLM要約 (evidence-gather出力への参照が必須)
+- HITL: 引用付きで主張を提示し、(y / n / 編集) を尋ねます。曖昧 → 再度質問します。
 - y → record-claim.sh --type claim ...
 - n → record-claim.sh --type rejection ...
-- edit → use edited text, record-claim.sh --type claim ...
+- edit → 編集されたテキストを使用、record-claim.sh --type claim ...
 
-## Step 5: Save .honne/persona.json
+## ステップ5: .honne/persona.json を保存
 
-Schema per architecture PRD §3.2. Approved axes only.
+architecture PRD §3.2スキーマ。承認された軸のみ。
 
-## Step 6: Render docs/honne.md
+## ステップ6: docs/honne.md をレンダリング
 
-Human-readable report. Every claim must have ≥ 1 quote or be marked [insufficient evidence].
+人間が読める報告書。すべての主張には ≥ 1個の引用が必要または [insufficient evidence] でマークされている必要があります。
 
-Forbidden phrases (horoscope): "at times", "sometimes", "in certain situations", "때로는", "상황에 따라", "적절히".
+禁止フレーズ (ホロスコープ): "at times", "sometimes", "in certain situations", "때로는", "상황에 따라", "적절히".
 
-## Step 7: Evolution link (2nd+ run)
+## ステップ7: 進化リンク (2回目以降の実行)
 
-If .honne/assets/claim.jsonl has entries from before this run:
+.honne/assets/claim.jsonlにこの実行前のエントリがある場合:
 - query-assets.sh --tag <axis> --type claim --scope "$SCOPE" --until <this-run-ts>
-- LLM pair classifier: {past_claim, present_claim} → label ∈ {identical, evolved, reversed, unrelated} with confidence
+- LLM ペア分類器: {past_claim, present_claim} → label ∈ {identical, evolved, reversed, unrelated} with confidence
 - confidence < 0.7 → unrelated
-- identical → set prior_id on current claim asset, no new evolution
+- identical → 現在の主張資産にprior_idを設定、新しい進化なし
 - evolved / reversed → record-claim.sh --type evolution --prior-id <past> ...
 
-## Completion
+## 完了
 
-Report saved files + remind user: "/honne:compare to review past."
+保存されたファイルを報告 + ユーザーに注記: "/honne:compare to review past."
 
 ## LLM Prompt Templates
 

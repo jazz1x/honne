@@ -1,5 +1,5 @@
 ---
-name: honne
+name: whoami
 version: 0.0.1
 description: >
   로컬 LLM 트랜스크립트에서 6축 자기관찰을 오케스트레이션합니다.
