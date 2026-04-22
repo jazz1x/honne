@@ -1,3 +1,5 @@
-{"type":"user","message":{"role":"user","content":"일단 이 버그부터 잡아볼게요. 파일 경로: /Users/jongyun/code/foo.ts"},"timestamp":"2026-04-10T10:00:00Z","sessionId":"sess-001","uuid":"u-001"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"확인했습니다. API 키가 노출돼 있네요: sk-proj-abcdefghijklmnopqrstuvwx123456. 마스킹 필요."}]},"timestamp":"2026-04-10T10:00:05Z","sessionId":"sess-001","uuid":"u-002"}
-{"type":"user","message":{"role":"user","content":"수정해줘. email 도 user@example.com 으로 로그에 남아있음."},"timestamp":"2026-04-10T10:01:00Z","sessionId":"sess-001","uuid":"u-003"}
+{"sessionId":"test-session-abc","cwd":"/test/project","ts":"2024-01-15T10:00:00Z","type":"summary"}
+{"timestamp":"2024-01-15T10:00:01Z","message":{"role":"user","content":[{"type":"text","text":"Hello, can you help me with a Python function?"}]}}
+{"timestamp":"2024-01-15T10:00:05Z","message":{"role":"assistant","content":[{"type":"text","text":"Sure! I'd be happy to help with your Python function. What would you like to create?"}]}}
+{"timestamp":"2024-01-15T10:00:10Z","message":{"role":"user","content":[{"type":"text","text":"Write a function that reverses a string"}]}}
+{"timestamp":"2024-01-15T10:00:15Z","message":{"role":"assistant","content":[{"type":"text","text":"Here's a simple function to reverse a string:\n\ndef reverse_string(s):\n    return s[::-1]"}]}}

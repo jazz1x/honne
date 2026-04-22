@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Tokenize Unicode word-like sequences from stdin, one lowercased token per line.
-
-Matches letters + digits across scripts (Hangul, Kana, Kanji, Latin, Cyrillic, ...)
-via \\w minus underscore. Used as the Python primary backend for honne lexicon
-extraction. Called by extract-lexicon.sh when python3 is available.
-"""
-import re
+"""Re-export shim for backward compatibility. Delegates to honne_py.tokenize_text."""
 import sys
+from pathlib import Path
 
-# [^\W_] = \w without underscore = letters + digits, Unicode-aware by default (Python 3)
-TOKEN = re.compile(r'[^\W_]+', re.UNICODE)
+sys.path.insert(0, str(Path(__file__).parent))
+from honne_py.tokenize_text import tokenize
 
-text = sys.stdin.read()
-for match in TOKEN.finditer(text):
-    print(match.group().lower())
+if __name__ == "__main__":
+    text = sys.stdin.read()
+    for token in tokenize(text):
+        print(token)

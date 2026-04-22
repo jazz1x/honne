@@ -23,11 +23,19 @@ HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
 bash "$HONNE_ROOT/scripts/scan-transcripts.sh" \
   --scope "$SCOPE" --since "2020-01-01" \
   --cache ".honne/cache/scan.json" \
-  --index-ref ".honne/cache/index.json" \
-  --redact-secrets
+  --index-ref ".honne/cache/index.json"
 ```
 
 If exit 2 (no transcripts) → report "insufficient data. change scope?" → end.
+
+**Progress monitoring** — use Monitor until-loop (never `sleep N && cat`):
+```bash
+until [ -f ".honne/cache/scan.json" ]; do sleep 2; done
+# ↑ wrong pattern (polling with sleep)
+
+# ✓ correct: use Monitor tool with an until-loop
+# Monitor: until [ -f ".honne/cache/scan.json" ]
+```
 
 ## Step 3: Pre-HITL rejection reframe filter
 

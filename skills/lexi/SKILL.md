@@ -20,4 +20,9 @@ Standalone lexicon extraction and analysis. Runs extract-lexicon.sh, presents fi
 6. Record as claim/rejection asset
 7. Check past rejections to avoid re-proposing
 
+**Progress monitoring** — use Monitor until-loop (never `sleep N && cat`):
+```bash
+# ✓ Monitor: until [ -f ".honne/cache/lexicon.json" ]
+```
+
 Report saved to stdout + .honne/assets/claim.jsonl
