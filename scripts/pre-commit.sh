@@ -78,7 +78,13 @@ if [ -n "$SKILL_FILES" ]; then
       fail "$f — missing 'version' in frontmatter"
     else
       version_val=$(echo "$fm" | grep '^version:' | sed 's/^version:[[:space:]]*//')
-      if echo "$version_val" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+      name_val=$(echo "$fm" | grep '^name:' | head -1 | sed 's/^name:[[:space:]]*//')
+      if echo "$name_val" | grep -q ':'; then
+        # Regression guard: galmuri hit an install failure because a SKILL.md
+        # had `name: galmuri:distill`. The plugin namespace is auto-prefixed
+        # by Claude Code — including it manually makes the skill unloadable.
+        fail "$f — name contains ':' ($name_val). The '<plugin>:' prefix is auto-generated; use bare skill name (e.g. 'distill', not 'galmuri:distill')"
+      elif echo "$version_val" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
         pass "$f (v$version_val)"
       else
         fail "$f — invalid version format '$version_val' (expected X.Y.Z)"
