@@ -3,12 +3,40 @@ import os
 import sys
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Iterator, Union, Optional
 
 from .io import atomic_write, sha256_file
 from .redact import redact
+
+_META_BLACKLIST = (
+    "Base directory for this skill:",
+    "<command-message>",
+    "<command-name>",
+    "This session is being continued",
+    "<local-command-stdout>",
+    "<local-command-stderr>",
+    "<local-command-caveat>",
+    "<system-reminder>",
+    "CRITICAL: Respond with TEXT ONLY",
+)
+
+_ASSISTANT_LEAK_PREFIXES = ("## 🎉", "✅", "🎉", "# Milestone")
+
+
+def _is_meta_preamble(text: str) -> bool:
+    stripped = text.lstrip()
+    return any(stripped.startswith(marker) for marker in _META_BLACKLIST)
+
+
+def _is_assistant_leak(text: str) -> bool:
+    stripped = text.lstrip()
+    if any(stripped.startswith(p) for p in _ASSISTANT_LEAK_PREFIXES):
+        return True
+    if text.count("✅") >= 3:
+        return True
+    return False
 
 
 def run_scan(
@@ -111,7 +139,7 @@ def run_scan(
     # Write cache atomically
     result = {
         "scope": scope,
-        "scanned_at": datetime.utcnow().isoformat() + "Z",
+        "scanned_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "sessions": sessions,
     }
     cache.parent.mkdir(parents=True, exist_ok=True)
@@ -162,6 +190,10 @@ def _parse_jsonl(jsonl_path: Path, redact_secrets: bool = True) -> Optional[dict
                 text = ""
 
             if not text or not text.strip():
+                continue
+
+            # Skip meta/preamble injections and assistant-leak messages
+            if role == "user" and (_is_meta_preamble(text) or _is_assistant_leak(text)):
                 continue
 
             # Redact

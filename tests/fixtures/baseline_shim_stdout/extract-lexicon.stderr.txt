@@ -1,0 +1,3 @@
+usage: honne_py extract lexicon [-h] --input INPUT --out OUT [--top TOP]
+                                [--min-sessions MIN_SESSIONS]
+error: the following arguments are required: --input, --out

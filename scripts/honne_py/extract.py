@@ -2,7 +2,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator, Union, Optional
 
@@ -56,7 +56,7 @@ def extract_lexicon(input_path: Union[Path, str], out_path: Union[Path, str], to
 
     result = {
         "axis": "lexicon",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": dict(top_words),
         "top_examples": [{"word": word, "sessions": len(word_sessions[word])} for word, _ in top_words],
         "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(word_sessions)},
@@ -85,12 +85,15 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
 
     # Preamble hashing (first user message)
     preamble_hashes = Counter()
+    preamble_first: dict = {}  # hash_val → {text, session_id, ts}
     lang_split = {"ko": 0, "en": 0}
     ko_msg_avg = []
     en_msg_avg = []
 
     for session in sessions:
         messages = session.get("messages", [])
+        sid = session.get("session_id", "")
+        ts = session.get("started_at", "")
 
         # First user message
         for msg in messages:
@@ -99,6 +102,12 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
                 first_10_lines = "\n".join(text.split("\n")[:10])
                 preamble_hash = hash(first_10_lines) % (10 ** 10)
                 preamble_hashes[preamble_hash] += 1
+                if preamble_hash not in preamble_first:
+                    preamble_first[preamble_hash] = {
+                        "text": first_10_lines,
+                        "first_session_id": sid,
+                        "first_ts": ts,
+                    }
                 break
 
         # Language split
@@ -115,16 +124,21 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
             lang_split["en"] += 1
             en_msg_avg.append(len(user_msgs))
 
-    # Top preambles
+    # Top preambles — no threshold, top 5 by frequency
     top_preambles = [
-        {"hash": str(hash_val), "count": count}
+        {
+            "hash": str(hash_val),
+            "count": count,
+            "text": preamble_first.get(hash_val, {}).get("text", ""),
+            "first_session_id": preamble_first.get(hash_val, {}).get("first_session_id", ""),
+            "first_ts": preamble_first.get(hash_val, {}).get("first_ts", ""),
+        }
         for hash_val, count in preamble_hashes.most_common(5)
-        if count >= 50  # Threshold for "preamble"
     ]
 
     result = {
         "axis": "obsession",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": {
             "language_split": lang_split,
             "avg_messages_ko": round(sum(ko_msg_avg) / len(ko_msg_avg), 2) if ko_msg_avg else 0,
@@ -156,12 +170,7 @@ def extract_reaction(input_path: Union[Path, str], out_path: Union[Path, str]) -
         return 2
 
     counters = {"correction": 0, "scope_cut": 0, "deepen": 0, "approval": 0}
-    patterns = {
-        "correction": re.compile(r'(아님|아니|틀렸|잘못|wrong|incorrect|not (right|correct))', re.IGNORECASE),
-        "scope_cut": re.compile(r'(만|그만|stop|only|just|대신|하지마|skip)', re.IGNORECASE),
-        "deepen": re.compile(r'(더|추가|계속|확장|deeper|more|continue|expand|elaborate)', re.IGNORECASE),
-        "approval": re.compile(r'(좋|맞|맞아|완벽|good|perfect|correct|nice|yes[.!]?\s*$)', re.IGNORECASE),
-    }
+    patterns = REACTION_PATTERNS
 
     matched_sessions = set()
 
@@ -182,7 +191,7 @@ def extract_reaction(input_path: Union[Path, str], out_path: Union[Path, str]) -
 
     result = {
         "axis": "reaction",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": counters,
         "top_examples": [],
         "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(matched_sessions)},
@@ -211,10 +220,12 @@ def extract_workflow(input_path: Union[Path, str], out_path: Union[Path, str]) -
 
     counters = {"code_first": 0, "question_driven": 0, "multi_file_scope": 0, "small_targeted": 0}
     matched_sessions = set()
+    first_examples: dict = {}  # key → {first_text, first_session_id, first_ts}
 
     for session in sessions:
         messages = session.get("messages", [])
         session_id = session.get("session_id")
+        ts = session.get("started_at", "")
 
         for msg in messages:
             if msg.get("role") != "user":
@@ -227,29 +238,42 @@ def extract_workflow(input_path: Union[Path, str], out_path: Union[Path, str]) -
             if "```" in first_2_lines or re.search(r'(\/.\/|\.py|\.ts|\.js|\.go|\.rs)', first_2_lines):
                 counters["code_first"] += 1
                 matched_sessions.add(session_id)
+                if "code_first" not in first_examples:
+                    first_examples["code_first"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
 
             # question_driven
             if "?" in text or re.search(r'(어떻게|왜|what|why|how)', first_2_lines, re.IGNORECASE):
                 counters["question_driven"] += 1
                 matched_sessions.add(session_id)
+                if "question_driven" not in first_examples:
+                    first_examples["question_driven"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
 
             # multi_file_scope
             paths = re.findall(r'(/[\w/.-]+|[\w/.-]+\.\w+)', text)
             if len(set(paths)) >= 2:
                 counters["multi_file_scope"] += 1
                 matched_sessions.add(session_id)
+                if "multi_file_scope" not in first_examples:
+                    first_examples["multi_file_scope"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
 
             # small_targeted
             single_path_match = len([p for p in paths if "/" in p or "." in p]) == 1
             if single_path_match and (re.search(r'\w+\(', text) or re.search(r'line \d+', text)):
                 counters["small_targeted"] += 1
                 matched_sessions.add(session_id)
+                if "small_targeted" not in first_examples:
+                    first_examples["small_targeted"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
+
+    top_examples = [
+        {"key": k, **v}
+        for k, v in sorted(first_examples.items(), key=lambda x: -counters.get(x[0], 0))
+    ]
 
     result = {
         "axis": "workflow",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": counters,
-        "top_examples": [],
+        "top_examples": top_examples,
         "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(matched_sessions)},
     }
 
@@ -275,9 +299,12 @@ def extract_ritual(input_path: Union[Path, str], out_path: Union[Path, str]) -> 
         return 2
 
     counters = {"direct_command": 0, "question": 0, "task_description": 0}
+    first_examples: dict = {}  # key → {first_text, first_session_id, first_ts}
 
     for session in sessions:
         messages = session.get("messages", [])
+        session_id = session.get("session_id", "")
+        ts = session.get("started_at", "")
 
         # First user message
         for msg in messages:
@@ -285,19 +312,27 @@ def extract_ritual(input_path: Union[Path, str], out_path: Union[Path, str]) -> 
                 text = msg.get("text", "").strip()
 
                 if re.match(r'^(해봐|실행|run|do|execute|make|build)\b', text, re.IGNORECASE):
-                    counters["direct_command"] += 1
+                    key = "direct_command"
                 elif "?" in text or re.match(r'^(어떻게|뭐|무엇|what|why|how)', text, re.IGNORECASE):
-                    counters["question"] += 1
+                    key = "question"
                 else:
-                    counters["task_description"] += 1
+                    key = "task_description"
 
+                counters[key] += 1
+                if key not in first_examples:
+                    first_examples[key] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
                 break
+
+    top_examples = [
+        {"key": k, **v}
+        for k, v in sorted(first_examples.items(), key=lambda x: -counters.get(x[0], 0))
+    ]
 
     result = {
         "axis": "ritual",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": counters,
-        "top_examples": [],
+        "top_examples": top_examples,
         "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(sessions)},
     }
 
@@ -324,36 +359,49 @@ def extract_antipattern(input_path: Union[Path, str], out_path: Union[Path, str]
 
     counters = {"overspec": 0, "repeat_same_request": 0}
     matched_sessions = set()
+    first_examples: dict = {}  # key → {first_text, first_session_id, first_ts}
 
     overspec_pattern = re.compile(r'(반드시|무조건|정확히|exactly|must|ALWAYS|NEVER|strictly|in this exact order)', re.IGNORECASE)
 
     for session in sessions:
         messages = session.get("messages", [])
         session_id = session.get("session_id")
+        ts = session.get("started_at", "")
 
         # overspec
         for msg in messages:
             if msg.get("role") == "user":
-                if overspec_pattern.search(msg.get("text", "")):
+                text = msg.get("text", "")
+                if overspec_pattern.search(text):
                     counters["overspec"] += 1
                     matched_sessions.add(session_id)
+                    if "overspec" not in first_examples:
+                        first_examples["overspec"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
 
         # repeat_same_request
         normalized_texts = set()
         for msg in messages:
             if msg.get("role") == "user":
-                normalized = re.sub(r'\s+', ' ', msg.get("text", "")).lower()
+                text = msg.get("text", "")
+                normalized = re.sub(r'\s+', ' ', text).lower()
                 if normalized in normalized_texts:
                     counters["repeat_same_request"] += 1
                     matched_sessions.add(session_id)
+                    if "repeat_same_request" not in first_examples:
+                        first_examples["repeat_same_request"] = {"first_text": text, "first_session_id": session_id, "first_ts": ts}
                     break
                 normalized_texts.add(normalized)
 
+    top_examples = [
+        {"key": k, **v}
+        for k, v in sorted(first_examples.items(), key=lambda x: -counters.get(x[0], 0))
+    ]
+
     result = {
         "axis": "antipattern",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "counters": counters,
-        "top_examples": [],
+        "top_examples": top_examples,
         "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(matched_sessions)},
     }
 
@@ -362,6 +410,14 @@ def extract_antipattern(input_path: Union[Path, str], out_path: Union[Path, str]
         json.dump(result, f)
 
     return 0
+
+
+REACTION_PATTERNS: dict = {
+    "correction": re.compile(r'(아님|아니|틀렸|잘못|wrong|incorrect|not (right|correct))', re.IGNORECASE),
+    "scope_cut":  re.compile(r'(만|그만|stop|only|just|대신|하지마|skip)', re.IGNORECASE),
+    "deepen":     re.compile(r'(더|추가|계속|확장|deeper|more|continue|expand|elaborate)', re.IGNORECASE),
+    "approval":   re.compile(r'(좋|맞|맞아|완벽|good|perfect|correct|nice|yes[.!]?\s*$)', re.IGNORECASE),
+}
 
 
 def _tokenize(text: str) -> Iterator[str]:

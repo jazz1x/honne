@@ -1,0 +1,23 @@
+軸5 — 儀式 (Ritual)
+
+セッション毎に繰り返される儀式を受け入れますか？
+
+- [0570e235]   — 커밋하고 일단. 
+
+/autonomous-loop
+- [18d0e66e]   — I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho…
+- [18d0e66e]   — Do a thorough deep audit of the Phase 19-22 LangChain MCP sampling integration. This is NOT a surface-level check — trace actual code paths and verify correctness.
+
+## 1. Implementation correctness — …
+
+candidate: 커밋하고 일단. 
+
+/autonomous-loop · I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho… · Do a thorough deep audit of the Phase 19-22 LangChain MCP sampling integration. This is NOT a surface-level check — trace actual code paths and verify correctness.
+
+## 1. Implementation correctness — …
+
+[y / n / edit]

@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
-# scripts/query-assets.sh — shim → python3 -m honne_py query "$@"
 command -v python3 >/dev/null || { echo "python3 required" >&2; exit 4; }
-PYTHONPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd):${PYTHONPATH:-}" exec python3 -m honne_py query "$@"
+exec "$(dirname "${BASH_SOURCE[0]}")/honne" query "$@"

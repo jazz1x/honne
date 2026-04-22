@@ -1,0 +1,13 @@
+軸1 — 語彙 (Lexicon)
+
+繰り返し表現・コードスイッチ・擬音語の候補を受け入れますか？
+
+- [18d0e66e]   — I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho…
+
+candidate: I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho…
+
+[y / n / edit]

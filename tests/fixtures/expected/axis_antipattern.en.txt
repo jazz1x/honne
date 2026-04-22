@@ -1,0 +1,10 @@
+Axis 6 — Antipattern
+
+Accept this recurring inefficiency?
+
+- [d8d0d283]   — In this Python codebase, find and read the health resource implementation. The document claims `health://status` calls a non-existent method on the SQLite store. Find the health resource handler in th…
+- [468dc7af]   — 그럼 저수준모델로 자율구현 스킬 돌려도 될 정도가 되었습니까!?
+
+candidate: In this Python codebase, find and read the health resource implementation. The document claims `health://status` calls a non-existent method on the SQLite store. Find the health resource handler in th… · 그럼 저수준모델로 자율구현 스킬 돌려도 될 정도가 되었습니까!?
+
+[y / n / edit]

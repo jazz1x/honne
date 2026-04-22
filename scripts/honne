@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# scripts/honne — single entrypoint. See docs/prd-honne-whoami-haiku-robustness.md
+set -eo pipefail
+HONNE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PY_DIR="$HONNE_ROOT/scripts"
+ERR_FILE="$HONNE_ROOT/skills/whoami/templates/errors.txt"
+
+emit_banner() {
+  local code="$1" loc="${HONNE_LOCALE:-ko}"
+  if [ -f "$ERR_FILE" ]; then
+    awk -F'\t' -v c="$code" -v l="$loc" \
+      '$1==c && $2==l {print $3; exit}' "$ERR_FILE"
+  fi
+  # errors.txt missing/no match → emit raw code only (E7)
+  echo "exit=$code" >&2
+}
+
+on_exit() {
+  local code=$?
+  [ $code -ne 0 ] && emit_banner "$code" >&2
+  exit $code
+}
+trap on_exit EXIT
+
+PYTHONPATH="$PY_DIR:${PYTHONPATH:-}" exec python3 -m honne_py "$@"

@@ -20,3 +20,6 @@ docs/honne-compare.md
 .pytest_cache/
 tests/.tmp/
 __pycache__/
+tests/fixtures/.axis_*.json
+tests/fixtures/seed_scan.json
+tests/fixtures/seed_170sessions.jsonl
