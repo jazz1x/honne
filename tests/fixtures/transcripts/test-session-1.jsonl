@@ -1,0 +1,3 @@
+{"type":"user","message":{"role":"user","content":"일단 이 버그부터 잡아볼게요. 파일 경로: /Users/jongyun/code/foo.ts"},"timestamp":"2026-04-10T10:00:00Z","sessionId":"sess-001","uuid":"u-001"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"확인했습니다. API 키가 노출돼 있네요: sk-proj-abcdefghijklmnopqrstuvwx123456. 마스킹 필요."}]},"timestamp":"2026-04-10T10:00:05Z","sessionId":"sess-001","uuid":"u-002"}
+{"type":"user","message":{"role":"user","content":"수정해줘. email 도 user@example.com 으로 로그에 남아있음."},"timestamp":"2026-04-10T10:01:00Z","sessionId":"sess-001","uuid":"u-003"}

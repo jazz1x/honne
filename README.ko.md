@@ -280,6 +280,16 @@ git config core.hooksPath .githooks
 
 훅 ([scripts/pre-commit.sh](scripts/pre-commit.sh)) 은 스테이징된 파일을 검증합니다: shell lint (`shellcheck` 또는 `bash -n` fallback), JSON 구문, `SKILL.md` frontmatter (`name` / `description` / SemVer `version`), 스크립트 실행 권한, `.claude-plugin/marketplace.json` 스키마 (`source: "."` 함정은 여기서 차단).
 
+### 테스트 스위트
+
+하이브리드 테스트 스위트 실행 (파이썬 helper 는 pytest, shell/매니페스트는 bats):
+
+```bash
+bash tests/run.sh
+```
+
+최초 1회 설치 — `brew install bats-core` (macOS) 또는 `apt install bats` (Linux). 모든 테스트는 임시 `HOME` 및 `CLAUDE_PROJECT_DIR` 샌드박스에서 실행되며, 실제 `~/.claude/` · `~/.honne/` 는 절대 건드리지 않습니다. 실수로 실제 HOME 에 착지하면 [tests/setup.bash](tests/setup.bash) 의 가드가 즉시 abort.
+
 ## Footnote
 
 > *"판단하지 않고 비추는 거울은 드물다. 당신이 이미 쓴 것만 보여주는 거울이야말로 가장 정직한 종류다."*

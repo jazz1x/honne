@@ -280,6 +280,16 @@ git config core.hooksPath .githooks
 
 The hook ([scripts/pre-commit.sh](scripts/pre-commit.sh)) validates staged files: shell lint (`shellcheck` or `bash -n` fallback), JSON syntax, `SKILL.md` frontmatter (`name` / `description` / SemVer `version`), script executable bits, and `.claude-plugin/marketplace.json` schema (the `source: "."` footgun is blocked here).
 
+### Test suite
+
+Run the hybrid test suite (pytest for Python helpers, bats for shell scripts + manifest schema):
+
+```bash
+bash tests/run.sh
+```
+
+Install requirements once — `brew install bats-core` (macOS) or `apt install bats` (Linux). Every test executes inside an ephemeral sandbox `HOME` and `CLAUDE_PROJECT_DIR`; real `~/.claude/` and `~/.honne/` are never touched. See [tests/setup.bash](tests/setup.bash) for the guard that aborts if a test somehow lands on the real home.
+
 ## Footnote
 
 > *"A mirror that reflects without judging is rare. One that shows only what you already wrote is the most honest kind."*
