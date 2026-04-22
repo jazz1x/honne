@@ -1,0 +1,6 @@
+일단 해볼게요. Let's try this first.
+구현 시작할게 — start implementation.
+하아 피곤하다 짜잔 완성.
+コードをチェックします。ちょっと待って。
+한국어 english 日本語 混在 text.
+symbols should_not break _tokenize 123 456.

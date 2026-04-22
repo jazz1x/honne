@@ -280,6 +280,16 @@ git config core.hooksPath .githooks
 
 フック ([scripts/pre-commit.sh](scripts/pre-commit.sh)) はステージ済みファイルを検証します: shell lint (`shellcheck` または `bash -n` フォールバック)、JSON 構文、`SKILL.md` frontmatter (`name` / `description` / SemVer `version`)、スクリプトの実行権限、`.claude-plugin/marketplace.json` スキーマ (`source: "."` の罠はここで遮断)。
 
+### テストスイート
+
+ハイブリッドテストスイート実行 (Python ヘルパーは pytest、shell/マニフェストは bats):
+
+```bash
+bash tests/run.sh
+```
+
+初回のみインストール — `brew install bats-core` (macOS) または `apt install bats` (Linux)。すべてのテストは一時的な `HOME` と `CLAUDE_PROJECT_DIR` サンドボックス内で実行され、実際の `~/.claude/` · `~/.honne/` には一切触れません。誤って実 HOME に着地した場合、[tests/setup.bash](tests/setup.bash) のガードが即座に abort します。
+
 ## Footnote
 
 > *「判断せずに映す鏡は珍しい。あなたがすでに書いたものだけを映す鏡こそ、もっとも誠実な類だ。」*

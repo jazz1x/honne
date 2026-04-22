@@ -15,3 +15,8 @@ docs/honne-compare.md
 .vscode/
 .idea/
 *.swp
+
+# Test artifacts
+.pytest_cache/
+tests/.tmp/
+__pycache__/
