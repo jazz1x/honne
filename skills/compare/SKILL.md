@@ -27,6 +27,11 @@ bash "$HONNE_ROOT/scripts/query-assets.sh" \
   --type evolution --scope "$SCOPE" --out stdout
 ```
 
+**Async wait pattern** — use Monitor until-loop, not `sleep N && cat`:
+```bash
+# ✓ Monitor: until [ -f ".honne/assets/claim.jsonl" ]
+```
+
 ## Step 4: Time-bucket grouping
 
 Group by axis × recorded_at bucket (YYYY-MM granularity for MVP).

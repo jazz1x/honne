@@ -38,21 +38,13 @@ Each skill operates in its own orbit, connected only through **shared artifacts 
 
 ## Prerequisites
 
-honne requires `jq` plus one of `python3` or `ripgrep`. Install before using:
+honne requires **python3 ≥ 3.9**. No other dependencies.
 
 ```bash
-# macOS — python3 is preinstalled
-brew install jq
-# (optional backend) brew install ripgrep
-
-# Linux (apt) — python3 is preinstalled on most distros
-sudo apt install jq
-# (optional backend) sudo apt install ripgrep
+python3 --version   # must be 3.9+
 ```
 
-Verify: `command -v jq && { command -v python3 || command -v rg; }`. Without both of these, scripts exit with code 4.
-
-**Backend selection**: scripts auto-detect `python3` first (preferred — native Unicode tokenization, single-pass redaction). If absent, they fall back to `ripgrep`. No configuration needed.
+Scripts exit with code 4 if python3 is missing or below 3.9. `jq` and `ripgrep` are no longer required.
 
 ## Install
 
@@ -222,7 +214,7 @@ Everything stays local under `.honne/` in your current project directory:
 
 **Privacy**:
 - No network calls. Everything processes locally.
-- Sensitive patterns (API keys, tokens, webhooks, emails, phone numbers, home paths, IPs, credit cards — 12 patterns total) are redacted before any quote storage. See `scripts/scan-transcripts.sh` §redact-secrets.
+- Sensitive patterns (API keys, tokens, webhooks, emails, phone numbers, home paths, IPs, credit cards — 12 patterns total) are redacted before any quote storage. See `scripts/honne_py/redact.py`.
 - Assets are **never auto-injected** into session context. They load only when you explicitly invoke `compare` or call `query-assets.sh`.
 - `CLAUDE.md` auto-injection is permanently prohibited (prevents self-reinforcement loop).
 

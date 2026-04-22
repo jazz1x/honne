@@ -125,6 +125,38 @@ teardown() {
   [[ -n "$USER_TEXT" ]]
 }
 
+# ---------- shim exit-code contracts ----------
+
+@test "extract-lexicon.sh exits 1 on unknown arg" {
+  run bash "$REPO_ROOT/scripts/extract-lexicon.sh" --bogus
+  [ "$status" -eq 1 ]
+}
+
+@test "detect-recurrence.sh exits 1 on unknown arg" {
+  run bash "$REPO_ROOT/scripts/detect-recurrence.sh" --bogus
+  [ "$status" -eq 1 ]
+}
+
+@test "evidence-gather.sh exits 1 on unknown arg" {
+  run bash "$REPO_ROOT/scripts/evidence-gather.sh" --bogus
+  [ "$status" -eq 1 ]
+}
+
+@test "index-session.sh exits 1 on unknown arg" {
+  run bash "$REPO_ROOT/scripts/index-session.sh" --bogus
+  [ "$status" -eq 1 ]
+}
+
+@test "record-claim.sh exits 1 on unknown arg" {
+  run bash "$REPO_ROOT/scripts/record-claim.sh" --bogus
+  [ "$status" -eq 1 ]
+}
+
+@test "query-assets.sh exits 2 when .honne missing" {
+  run bash "$REPO_ROOT/scripts/query-assets.sh" --out /tmp/q.json
+  [ "$status" -eq 2 ]
+}
+
 # ---------- sandbox self-check ----------
 
 @test "sandbox preflight aborts if HOME is not in a temp root" {
