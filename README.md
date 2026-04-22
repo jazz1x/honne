@@ -67,13 +67,13 @@ This triggers the main orchestrator. On first invocation it will ask whether to 
 
 ## Skills
 
-| Skill | Command | Aliases | Role |
-|-------|---------|---------|------|
-| **honne** | `/honne:honne` | `/honne:whoami` · `/honne:hon-me` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
-| **lexi** | `/honne:lexi` | — | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
-| **compare** | `/honne:compare` | `/honne:diff` · `/honne:hon-back` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
+| Skill | Command | Alias | Role |
+|-------|---------|-------|------|
+| **honne** | `/honne:honne` | `/honne:me` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
+| **lexi** | `/honne:lexi` | `/honne:lex` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
+| **compare** | `/honne:compare` | `/honne:back` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
-Aliases come in two flavors: **semantic** (`whoami`, `diff`) for Unix-familiar entry points, and **brand-prefixed** (`hon-me`, `hon-back`) for harnish-style family visibility in the marketplace listing. Both redirect to the same core skill.
+Each skill exposes one short alias that reads naturally after the `honne:` namespace — `/honne:me`, `/honne:lex`, `/honne:back`. Both the canonical name and the alias redirect to the same core skill.
 
 Each skill operates in its own orbit, connected only through **shared artifacts on disk** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`).
 
@@ -183,8 +183,9 @@ If any output causes distress, delete it — `bash scripts/purge.sh --all`. Your
 - **honne** (本音) — the real voice under the official persona. Japanese origin, paired with *tatemae* (建前).
 - **lexi** — lexicon + i (vocabulary axis only)
 - **compare** — retrospective diff, past vs present (no transcript re-scan)
-- **whoami** / **hon-me** — aliases for `honne`. `whoami` is Unix-familiar; `hon-me` follows harnish's `har-*` brand prefix convention.
-- **diff** / **hon-back** — aliases for `compare`. `diff` is the universal term; `hon-back` reads as "honne, look back".
+- **me** — alias for `honne`. Reads as "honne me" after the namespace prefix.
+- **lex** — alias for `lexi`. Reads as "honne lex" — short form of lexicon.
+- **back** — alias for `compare`. Reads as "honne back" — look back at past runs.
 
 ## Triad
 
