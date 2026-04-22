@@ -2,68 +2,15 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
+![version](https://img.shields.io/badge/version-0.0.1-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
+![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
+
 **honne** (本音, "true voice") — a local, evidence-backed mirror of how you actually work with LLMs. Beneath the official persona (*tatemae*) surfaces what your transcripts quietly record: recurring vocabulary, rejected suggestions, session rituals, the patterns you never named.
 
+Everything runs locally. No network calls, no analytics. Every claim is HITL-approved before it enters your persona file. Your data lives under `.honne/` as plain JSONL — portable, inspectable, deletable.
+
 [한국어](./README.ko.md) · [日本語](./README.jp.md)
-
-## Prerequisites
-
-honne requires `jq` plus one of `python3` or `ripgrep`. Install before using:
-
-```bash
-# macOS — python3 is preinstalled
-brew install jq
-# (optional backend) brew install ripgrep
-
-# Linux (apt) — python3 is preinstalled on most distros
-sudo apt install jq
-# (optional backend) sudo apt install ripgrep
-```
-
-Verify: `command -v jq && { command -v python3 || command -v rg; }`. Without both of these, scripts exit with code 4.
-
-**Backend selection**: scripts auto-detect `python3` first (preferred — native Unicode tokenization, single-pass redaction). If absent, they fall back to `ripgrep`. No configuration needed.
-
-## Install
-
-### 1. Add the marketplace
-
-Inside Claude Code, register this repository as a plugin marketplace:
-
-```
-/plugin marketplace add https://github.com/jazz1x/honne.git
-```
-
-Expected output: `Marketplace "honne" added`.
-
-### 2. Install the plugin
-
-```
-/plugin install honne --scope user
-```
-
-Scope choice:
-
-| Scope | Effect | When to use |
-|-------|--------|-------------|
-| `--scope user` *(recommended)* | Installs into `~/.claude/` — honne can read transcripts across **all projects** | Normal use. Self-observation benefits from cross-project history. |
-| `--scope local` | Installs into the current project's `.claude/` only | Sandboxed trial, or when you intentionally want single-project scope. |
-
-### 3. Verify
-
-```
-/plugin list
-```
-
-You should see `honne` listed as an active plugin. The `SessionEnd` hook is registered automatically — no extra configuration.
-
-### 4. First run
-
-```
-/honne:honne
-```
-
-This triggers the main orchestrator. On first invocation it will ask whether to scan this repo only or all projects, then walk through the 6 axes with HITL approval. See [Usage](#usage) below for the full flow.
 
 ## Skills
 
@@ -90,6 +37,129 @@ Each skill operates in its own orbit, connected only through **shared artifacts 
                               │
  compare (read-only)  ──→  query-assets.sh  ──→  docs/honne-compare.md  (diff of past claims)
 ```
+
+## Prerequisites
+
+honne requires `jq` plus one of `python3` or `ripgrep`. Install before using:
+
+```bash
+# macOS — python3 is preinstalled
+brew install jq
+# (optional backend) brew install ripgrep
+
+# Linux (apt) — python3 is preinstalled on most distros
+sudo apt install jq
+# (optional backend) sudo apt install ripgrep
+```
+
+Verify: `command -v jq && { command -v python3 || command -v rg; }`. Without both of these, scripts exit with code 4.
+
+**Backend selection**: scripts auto-detect `python3` first (preferred — native Unicode tokenization, single-pass redaction). If absent, they fall back to `ripgrep`. No configuration needed.
+
+## Install
+
+### 1. Register the marketplace
+
+Inside a Claude Code session, run:
+
+```
+/plugin marketplace add https://github.com/jazz1x/honne.git
+```
+
+Expected output:
+
+```
+✓ Marketplace 'honne' added (1 plugin)
+```
+
+### 2. Install the plugin
+
+```
+/plugin install honne --scope user
+```
+
+Expected output:
+
+```
+✓ Installed honne@0.0.1 — 3 skills registered (honne, lexi, compare)
+```
+
+Scope choice:
+
+| Scope | Effect | When to use |
+|-------|--------|-------------|
+| `--scope user` *(recommended)* | Installs into `~/.claude/` — honne can read transcripts across **all projects** | Normal use. Self-observation benefits from cross-project history. |
+| `--scope local` | Installs into the current project's `.claude/` only | Sandboxed trial, or when you intentionally want single-project scope. |
+
+### 3. Verify
+
+```
+/plugin list
+```
+
+You should see `honne` in the list. If the three canonical slash commands below autocomplete, you're good:
+
+```
+/honne:honne
+/honne:lexi
+/honne:compare
+```
+
+The `SessionEnd` hook is registered automatically — no extra configuration.
+
+### 4. Uninstall
+
+```
+/plugin uninstall honne
+/plugin marketplace remove honne
+```
+
+Your `.honne/` directory is **not** touched by uninstall — your assets persist. Delete them manually with `bash scripts/purge.sh --all` if you want a clean wipe.
+
+---
+
+## Quickstart
+
+Once installed, try the fastest path end-to-end:
+
+```
+# Inside a Claude Code session, in any project
+/honne:me
+```
+
+Sample flow (simplified):
+
+```
+user   > /honne:me
+
+step 1 > Scan scope — repo (current project) or global (all projects)?
+user   > global
+
+step 2 > Indexing transcripts under ~/.claude/projects/… (127 files)
+step 3 > Redacting secrets (12 patterns) → cache .honne/cache/scan.json
+step 4 > Extracting 6 axes: lexicon, cadence, stance, ritual, antipattern, evolution
+step 5 > HITL per axis — [y]es / [n]o / [e]dit
+
+        axis 1 · lexicon   : "일단", "~해볼게", frequent code-switch en↔ko  → [y/n/e]?
+user   > y
+
+        ... (axes 2–6 similarly) ...
+
+step 6 > Write persona snapshot + longitudinal claim assets?
+user   > y
+
+✓ Saved: .honne/persona.json
+✓ Saved: docs/honne.md
+✓ Appended: .honne/assets/claim.jsonl (6 entries)
+```
+
+After ≥ 2 runs, you can compare past profiles:
+
+```
+/honne:back
+```
+
+This reads only what's already on disk — no transcript re-scan, no LLM re-analysis.
 
 ## Usage
 
@@ -189,11 +259,16 @@ If any output causes distress, delete it — `bash scripts/purge.sh --all`. Your
 
 ## Triad
 
-honne is one orbit of a three-plugin set:
+honne sits between two sibling plugins — independent, connected by shared artifacts only:
 
-- [harnish](https://github.com/jazz1x/harnish) — autonomous implementation engine (*makes*)
-- [honne](https://github.com/jazz1x/honne) — self-observation from transcripts (*knows*)
-- [galmuri](https://github.com/jazz1x/galmuri) — gather, organize, and keep context (*keeps*)
+```
+harnish (make)  ──→  honne (know)  ──→  galmuri (keep)
+  execution         reflection          refinement
+```
+
+- [harnish](https://github.com/jazz1x/harnish) — autonomous implementation engine
+- [honne](https://github.com/jazz1x/honne) — evidence-backed self-observation (6-axis persona)
+- [galmuri](https://github.com/jazz1x/galmuri) — gather, organize, and keep context (formerly *hanashi*)
 
 ## Development
 
@@ -205,6 +280,12 @@ git config core.hooksPath .githooks
 
 The hook ([scripts/pre-commit.sh](scripts/pre-commit.sh)) validates staged files: shell lint (`shellcheck` or `bash -n` fallback), JSON syntax, `SKILL.md` frontmatter (`name` / `description` / SemVer `version`), script executable bits, and `.claude-plugin/marketplace.json` schema (the `source: "."` footgun is blocked here).
 
+## Footnote
+
+> *"A mirror that reflects without judging is rare. One that shows only what you already wrote is the most honest kind."*
+
+honne never invents — it only surfaces what your transcripts already contain. If it tells you something you didn't say, we built the wrong tool.
+
 ## License
 
-MIT
+MIT — See [LICENSE](./LICENSE).
