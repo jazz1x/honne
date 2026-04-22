@@ -161,8 +161,8 @@ If any output causes distress, delete it — `bash scripts/purge.sh --all`. Your
 honne is one orbit of a three-plugin set:
 
 - [harnish](https://github.com/jazz1x/harnish) — autonomous implementation engine (*makes*)
-- **honne** — self-observation from transcripts (*knows*)
-- hanashi (planned) — delivery / communication (*tells*)
+- [honne](https://github.com/jazz1x/honne) — self-observation from transcripts (*knows*)
+- [galmuri](https://github.com/jazz1x/galmuri) — gather, organize, and keep context (*keeps*)
 
 ## License
 
