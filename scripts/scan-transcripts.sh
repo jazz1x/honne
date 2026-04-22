@@ -116,7 +116,20 @@ while IFS= read -r -d '' JSONL; do
   LINE_NUM=0
   while IFS= read -r LINE; do
     LINE_NUM=$((LINE_NUM + 1))
-    MSG=$(echo "$LINE" | jq -c 'select(.role and .text) | {role, text, ts: (.ts // "")}' 2>/dev/null) || {
+    MSG=$(echo "$LINE" | jq -c '
+      select(.message.role != null) |
+      {
+        role: .message.role,
+        text: (
+          if (.message.content | type) == "string" then .message.content
+          elif (.message.content | type) == "array" then
+            [.message.content[]? | select(.type == "text") | .text] | join("\n")
+          else "" end
+        ),
+        ts: (.timestamp // "")
+      } |
+      select(.text != "" and .text != null)
+    ' 2>/dev/null) || {
       _log warn "$SID: parse failed line $LINE_NUM"
       continue
     }
