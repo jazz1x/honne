@@ -26,14 +26,44 @@ Verify: `command -v jq && { command -v python3 || command -v rg; }`. Without bot
 
 ## Install
 
-Run Claude Code, then:
+### 1. Add the marketplace
+
+Inside Claude Code, register this repository as a plugin marketplace:
 
 ```
 /plugin marketplace add https://github.com/jazz1x/honne.git
+```
+
+Expected output: `Marketplace "honne" added`.
+
+### 2. Install the plugin
+
+```
 /plugin install honne --scope user
 ```
 
-User scope is recommended — it enables global transcript scanning across all projects. Local scope (project-only) is supported but limits self-observation to a single project.
+Scope choice:
+
+| Scope | Effect | When to use |
+|-------|--------|-------------|
+| `--scope user` *(recommended)* | Installs into `~/.claude/` — honne can read transcripts across **all projects** | Normal use. Self-observation benefits from cross-project history. |
+| `--scope local` | Installs into the current project's `.claude/` only | Sandboxed trial, or when you intentionally want single-project scope. |
+
+### 3. Verify
+
+```
+/plugin list
+```
+
+You should see `honne` listed as an active plugin. The `SessionEnd` hook is registered automatically — no extra configuration.
+
+### 4. First run
+
+```
+/honne:honne
+```
+
+This triggers the main orchestrator. On first invocation it will ask whether to scan this repo only or all projects, then walk through the 6 axes with HITL approval. See [Usage](#usage) below for the full flow.
 
 ## Skills
 

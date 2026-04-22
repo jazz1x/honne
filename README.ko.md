@@ -26,14 +26,44 @@ sudo apt install jq
 
 ## 설치
 
-Claude Code 를 실행한 뒤:
+### 1. 마켓플레이스 등록
+
+Claude Code 안에서 이 저장소를 플러그인 마켓플레이스로 등록:
 
 ```
 /plugin marketplace add https://github.com/jazz1x/honne.git
+```
+
+성공 시 `Marketplace "honne" added` 출력.
+
+### 2. 플러그인 설치
+
+```
 /plugin install honne --scope user
 ```
 
-user scope 를 권장합니다 — 모든 프로젝트를 가로지르는 전역 transcripts 스캔이 가능해집니다. local scope (프로젝트 전용) 도 지원하나, 자기 관찰 범위가 단일 프로젝트로 제한됩니다.
+스코프 선택:
+
+| 스코프 | 효과 | 사용 시점 |
+|--------|------|-----------|
+| `--scope user` *(권장)* | `~/.claude/` 에 설치 — **모든 프로젝트**의 transcripts 스캔 가능 | 일반적인 사용. 자기 관찰은 프로젝트를 가로지르는 이력이 있을수록 풍부해집니다. |
+| `--scope local` | 현재 프로젝트의 `.claude/` 에만 설치 | 시범 사용, 또는 의도적으로 단일 프로젝트 범위로 제한하고 싶을 때. |
+
+### 3. 설치 확인
+
+```
+/plugin list
+```
+
+`honne` 이 활성 플러그인으로 보여야 합니다. `SessionEnd` 훅은 자동 등록 — 추가 설정 없음.
+
+### 4. 첫 실행
+
+```
+/honne:honne
+```
+
+메인 오케스트레이터 진입. 첫 호출 시 스캔 범위(현재 repo / 전역)를 묻고, 6 개 축을 HITL 로 순회합니다. 전체 흐름은 [사용법](#사용법) 참조.
 
 ## 스킬
 
