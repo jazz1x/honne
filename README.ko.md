@@ -194,6 +194,16 @@ honne 는 세 플러그인으로 이루어진 궤도의 한 축입니다:
 - [honne](https://github.com/jazz1x/honne) — transcripts 로부터의 자기 관찰 (*안다*)
 - [galmuri](https://github.com/jazz1x/galmuri) — 컨텍스트 갈무리·정리·보관 (*간직한다*)
 
+## 개발
+
+clone 직후 한 번만 pre-commit 훅을 활성화:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+훅 ([scripts/pre-commit.sh](scripts/pre-commit.sh)) 은 스테이징된 파일을 검증합니다: shell lint (`shellcheck` 또는 `bash -n` fallback), JSON 구문, `SKILL.md` frontmatter (`name` / `description` / SemVer `version`), 스크립트 실행 권한, `.claude-plugin/marketplace.json` 스키마 (`source: "."` 함정은 여기서 차단).
+
 ## 라이선스
 
 MIT

@@ -194,6 +194,16 @@ honne is one orbit of a three-plugin set:
 - [honne](https://github.com/jazz1x/honne) — self-observation from transcripts (*knows*)
 - [galmuri](https://github.com/jazz1x/galmuri) — gather, organize, and keep context (*keeps*)
 
+## Development
+
+Enable the repo's pre-commit hook once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook ([scripts/pre-commit.sh](scripts/pre-commit.sh)) validates staged files: shell lint (`shellcheck` or `bash -n` fallback), JSON syntax, `SKILL.md` frontmatter (`name` / `description` / SemVer `version`), script executable bits, and `.claude-plugin/marketplace.json` schema (the `source: "."` footgun is blocked here).
+
 ## License
 
 MIT

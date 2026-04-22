@@ -194,6 +194,16 @@ honne は 3 プラグインからなる軌道のひとつです:
 - [honne](https://github.com/jazz1x/honne) — transcripts からの自己観察 (*知る*)
 - [galmuri](https://github.com/jazz1x/galmuri) — コンテキストを集め・整え・保つ (*保つ*)
 
+## 開発
+
+clone 後に一度だけ pre-commit フックを有効化:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+フック ([scripts/pre-commit.sh](scripts/pre-commit.sh)) はステージ済みファイルを検証します: shell lint (`shellcheck` または `bash -n` フォールバック)、JSON 構文、`SKILL.md` frontmatter (`name` / `description` / SemVer `version`)、スクリプトの実行権限、`.claude-plugin/marketplace.json` スキーマ (`source: "."` の罠はここで遮断)。
+
 ## ライセンス
 
 MIT
