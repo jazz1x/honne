@@ -14,13 +14,11 @@ Everything runs locally. No network calls, no analytics. Every claim is HITL-app
 
 ## Skills
 
-| Skill | Command | Alias | Role |
-|-------|---------|-------|------|
-| **honne** | `/honne:honne` | `/honne:me` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
-| **lexi** | `/honne:lexi` | `/honne:lex` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
-| **compare** | `/honne:compare` | `/honne:back` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
-
-Each skill exposes one short alias that reads naturally after the `honne:` namespace — `/honne:me`, `/honne:lex`, `/honne:back`. Both the canonical name and the alias redirect to the same core skill.
+| Skill | Command | Role |
+|-------|---------|------|
+| **honne** | `/honne:honne` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
+| **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
+| **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
 Each skill operates in its own orbit, connected only through **shared artifacts on disk** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`).
 
@@ -124,13 +122,13 @@ Once installed, try the fastest path end-to-end:
 
 ```
 # Inside a Claude Code session, in any project
-/honne:me
+/honne:honne
 ```
 
 Sample flow (simplified):
 
 ```
-user   > /honne:me
+user   > /honne:honne
 
 step 1 > Scan scope — repo (current project) or global (all projects)?
 user   > global
@@ -156,7 +154,7 @@ user   > y
 After ≥ 2 runs, you can compare past profiles:
 
 ```
-/honne:back
+/honne:compare
 ```
 
 This reads only what's already on disk — no transcript re-scan, no LLM re-analysis.
@@ -253,9 +251,6 @@ If any output causes distress, delete it — `bash scripts/purge.sh --all`. Your
 - **honne** (本音) — the real voice under the official persona. Japanese origin, paired with *tatemae* (建前).
 - **lexi** — lexicon + i (vocabulary axis only)
 - **compare** — retrospective diff, past vs present (no transcript re-scan)
-- **me** — alias for `honne`. Reads as "honne me" after the namespace prefix.
-- **lex** — alias for `lexi`. Reads as "honne lex" — short form of lexicon.
-- **back** — alias for `compare`. Reads as "honne back" — look back at past runs.
 
 ## Triad
 
