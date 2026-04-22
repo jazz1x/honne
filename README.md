@@ -2,7 +2,7 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
-![version](https://img.shields.io/badge/version-0.0.2-blue)
+![version](https://img.shields.io/badge/version-0.0.1-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 

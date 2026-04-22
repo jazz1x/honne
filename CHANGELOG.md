@@ -1,38 +1,36 @@
 # Changelog
 
-## 0.0.2 (2026-04-23)
+## 0.0.1 (unreleased)
 
-Haiku 4.5 determinism — low-tier models complete `/honne:whoami` without hallucination or silent fallbacks.
+Initial pre-release. First tag will be `v0.0.1`.
 
-- Single CLI wrapper `scripts/honne` — bundles PYTHONPATH, routes subcommands, emits coded stderr banners from `templates/errors.txt` on non-zero exit
-- `honne axis run <name> --emit-hitl-block` — deterministic HITL text assembled from `templates/axes.{ko,en,jp}.md`; models echo verbatim, do not paraphrase
-- `collect_quotes` contract — reuses `extract.py` per-axis `first_text`/`first_session_id`/`first_ts` (promoted in T6a), no LLM calls in quote selection
-- `honne axis validate` — forbidden-phrase check + `--skip-if-overlaps` (exit 3) for Step 3 rejection reframe filter
+### Skills & orchestration
+- Core skills: `honne:whoami` (main orchestrator, 6-axis persona), `honne:lexi` (lexicon axis only), `honne:compare` (asset diff, read-only retrospective)
+- `SessionEnd` hook for passive transcript indexing
+- Asset layer at `.honne/assets/*.jsonl` (claim / rejection / evolution) with explicit-query-only access
+
+### Python core
+- Single `python3 -m honne_py` entry (scan / extract / detect-recurrence / evidence / index / query / record / purge / precommit / **axis** / **doctor**)
+- 6-axis extraction: lexicon, reaction, workflow, obsession, ritual, antipattern
+- Zero `jq` dependency; pure Python JSON
+- `datetime.now(timezone.utc)` throughout (Python 3.12 compatible)
+
+### Haiku-safe determinism (`honne:whoami`)
+- Single bash wrapper `scripts/honne` — bundles PYTHONPATH, routes subcommands, emits coded stderr banners from `templates/errors.txt` on non-zero exit
+- `honne axis run <name> --emit-hitl-block` — deterministic HITL text assembled from `skills/whoami/templates/axes.{ko,en,jp}.md`; models echo verbatim
+- `collect_quotes` contract — reuses `extract.py` per-axis `first_text`/`first_session_id`/`first_ts`; no LLM calls in quote selection
+- `honne axis validate` — forbidden-phrase check + `--skip-if-overlaps` (exit 3) for rejection reframe filter
 - `scripts/honne doctor` — preflight for python3 / `.honne/` writability (exit codes 71 / 73)
-- SKILL.md reduced 140 → ~70 lines; Step 1 scope+locale and Step 4 y/n/edit via AskUserQuestion (arrow-key menu)
-- scan.py filter: meta-preamble (`<command-message>`, `<local-command-caveat>`, `Base directory for this skill`, `This session is being continued`) + assistant-leak heuristics
-- `datetime.utcnow()` → `datetime.now(timezone.utc)` (Python 3.12 deprecation, 8 sites)
-- `query.py` returns 0 on empty results when base_dir exists (was 2)
-- Tests: `unit_axis_contract`, `unit_doctor`, `unit_templates`; golden HITL fixtures at `tests/fixtures/expected/axis_*.{ko,en,jp}.txt`
-- Design: `docs/prd-honne-whoami-haiku-robustness.md` (architect), `docs/prd-honne-whoami-haiku-robustness-impl.md` (impl, 5 rev history in Appendix H)
+- `scan.py` filter: meta-preamble (`<command-message>`, `<local-command-caveat>`, `Base directory for this skill`, `This session is being continued`) + assistant-leak heuristics
+- SKILL.md condensed to ~70 lines; Step 1 (scope + locale) and Step 4 (y/n/edit) via `AskUserQuestion` arrow-key menu
 
-## 0.1.0 (2026-04-22)
+### Backward-compatible shims
+- Eight existing `.sh` shims (`scan-transcripts`, `evidence-gather`, `extract-lexicon`, `detect-recurrence`, `query-assets`, `record-claim`, `index-session`, `purge`) now redirect to the wrapper; snapshot test (`tests/snapshot_shim_compat.sh`) guards stdout/stderr byte-equality
 
-Python entrypoint refactor: single `python3 -m honne_py` entry replaces bash+jq orchestration.
+### Tests
+- `pytest` + `bats` runners via `tests/run.sh`
+- Contract tests: `unit_axis_contract`, `unit_doctor`, `unit_templates`, plus existing `unit_scan_*`, `unit_tokenize`, `unit_redact`
+- Golden HITL fixtures at `tests/fixtures/expected/axis_*.{ko,en,jp}.txt`
 
-- Unified CLI with subcommand dispatch (scan, extract, detect-recurrence, evidence, index, query, record, purge, precommit)
-- Bash shims (≤4 lines) delegate to Python core
-- JSONL streaming with time-based progress reporting
-- 6-axis extraction: lexicon, obsession, reaction, workflow, ritual, antipattern
-- Zero jq dependency; pure Python JSON
-- Re-export shims maintain backward compatibility (_redact.py, _tokenize.py)
-
-## 0.0.1 (2026-04-22)
-
-Initial release.
-
-- Core skills: `honne` (main orchestrator, 6-axis persona), `lexi` (lexicon axis), `compare` (asset diff, read-only retrospective).
-- Aliases: `whoami` → `honne`, `diff` → `compare`.
-- `SessionEnd` hook for passive transcript indexing.
-- Asset layer at `.honne/assets/*.jsonl` (claim/rejection/evolution) with explicit-query-only access.
-- Triplet i18n (en/ko/jp) for all user-facing docs.
+### Docs
+- Triplet i18n (en / ko / jp) for README and CHANGELOG
