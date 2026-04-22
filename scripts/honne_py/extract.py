@@ -4,7 +4,7 @@ import unicodedata
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Union, Optional
 
 
 def extract_lexicon(input_path: Union[Path, str], out_path: Union[Path, str], top: int = 50, min_sessions: int = 3) -> int:
