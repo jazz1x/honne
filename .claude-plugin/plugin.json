@@ -6,6 +6,5 @@
   "repository": "https://github.com/jazz1x/honne",
   "license": "MIT",
   "keywords": ["self-observation", "transcripts", "persona", "honne"],
-  "skills": "./skills",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills"
 }
