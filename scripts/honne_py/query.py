@@ -21,6 +21,8 @@ def query(
     # Load assets from .harnish directory
     result = []
     asset_dir = base_dir / "assets"
+    if not base_dir.exists():
+        return 2  # base_dir missing is a genuine error
     if asset_dir.exists():
         for asset_file in asset_dir.glob("*.jsonl"):
             with open(asset_file) as f:
@@ -45,7 +47,7 @@ def query(
         with open(out_path, "w") as f:
             json.dump(result, f)
 
-    return 0 if result else 2
+    return 0
 
 
 if __name__ == "__main__":

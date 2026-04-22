@@ -96,6 +96,23 @@ def main(argv: Optional[List[str]] = None) -> int:
     purge_parser.add_argument("--keep-assets", action="store_true")
     purge_parser.add_argument("--force", action="store_true")
 
+    # axis
+    axis_parser = subparsers.add_parser("axis", help="per-axis analysis")
+    axis_sub = axis_parser.add_subparsers(dest="subcommand", parser_class=_Parser)
+    axis_run = axis_sub.add_parser("run")
+    axis_run.add_argument("name")
+    axis_run.add_argument("--locale", required=True)
+    axis_run.add_argument("--scan", required=True)
+    axis_run.add_argument("--emit-hitl-block", action="store_true")
+    axis_val = axis_sub.add_parser("validate")
+    axis_val.add_argument("--text", required=True)
+    axis_val.add_argument("--locale", required=True)
+    axis_val.add_argument("--skip-if-overlaps", required=False)
+    axis_sub.add_parser("list")
+
+    # doctor
+    subparsers.add_parser("doctor", help="environment health check")
+
     # precommit
     precommit_parser = subparsers.add_parser("precommit", help="pre-commit hook")
 
@@ -187,5 +204,25 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif args.command == "precommit":
         from .precommit import precommit
         return precommit()
+
+    elif args.command == "axis" and args.subcommand == "run":
+        from .axis import run, AXES
+        from pathlib import Path
+        if args.name not in AXES:
+            return 2
+        return run(args.name, args.locale, Path(args.scan), args.emit_hitl_block)
+
+    elif args.command == "axis" and args.subcommand == "validate":
+        from .axis import validate
+        return validate(args.text, args.locale, skip_if_overlaps=args.skip_if_overlaps)
+
+    elif args.command == "axis" and args.subcommand == "list":
+        from .axis import AXES
+        print("\n".join(AXES))
+        return 0
+
+    elif args.command == "doctor":
+        from .doctor import main as doctor_main
+        return doctor_main()
 
     return 0

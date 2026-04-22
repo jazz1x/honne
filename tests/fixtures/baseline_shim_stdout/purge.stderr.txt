@@ -1,0 +1,1 @@
+error: required: --all or --keep-assets

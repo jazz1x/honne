@@ -1,0 +1,3 @@
+usage: honne_py evidence gather [-h] --input INPUT --claim CLAIM --out OUT
+                                [--max MAX]
+error: the following arguments are required: --input, --claim, --out

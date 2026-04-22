@@ -1,0 +1,5 @@
+usage: honne_py record claim [-h] --type TYPE --axis AXIS --scope SCOPE
+                             --claim CLAIM --out OUT
+                             [--support-count SUPPORT_COUNT]
+                             [--prior-id PRIOR_ID] [--quotes-json QUOTES_JSON]
+error: the following arguments are required: --type, --axis, --scope, --claim, --out

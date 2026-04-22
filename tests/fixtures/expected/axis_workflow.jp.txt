@@ -1,0 +1,19 @@
+軸3 — ワークフロー (Workflow)
+
+繰り返される作業順序を受け入れますか？
+
+- [18d0e66e]   — I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho…
+- [18d0e66e]   — I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho…
+- [62a21822]   — Find ALL occurrences of `datetime.utcnow()` in the Python codebase under python/boro_kit/ and python/tests/. Return the exact file paths, line numbers, and the full line content for each occurrence. B…
+
+candidate: I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho… → I need to find files that should be cleaned up for Phase 19-22 of the LangChain MCP integration project. Look for:
+
+1. Work memory files that are only used during autonomous development cycles and sho… → Find ALL occurrences of `datetime.utcnow()` in the Python codebase under python/boro_kit/ and python/tests/. Return the exact file paths, line numbers, and the full line content for each occurrence. B…
+
+[y / n / edit]

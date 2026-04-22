@@ -3,6 +3,13 @@
 # Both runners must pass for this script to exit 0.
 set -euo pipefail
 
+# impl-gate check — abort if pending human approval
+if [ -f .honne/impl-gate.lock ]; then
+  cat .honne/impl-gate.lock >&2
+  echo "tests skipped: impl-gate.lock present" >&2
+  exit 100
+fi
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 

@@ -1,0 +1,2 @@
+usage: honne_py index session [-h] --jsonl JSONL --out OUT
+error: the following arguments are required: --jsonl, --out

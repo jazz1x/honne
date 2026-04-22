@@ -2,7 +2,7 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
-![version](https://img.shields.io/badge/version-0.0.1-blue)
+![version](https://img.shields.io/badge/version-0.0.2-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -122,26 +122,33 @@ Sample flow (simplified):
 ```
 user   > /honne:whoami
 
-step 1 > Scan scope — repo (current project) or global (all projects)?
-user   > global
+step 1 > Scan scope?     ← arrow-key menu (repo / global)
+        Locale?          ← arrow-key menu (ko / en / jp)
+user   > [selects global, ko]
 
-step 2 > Indexing transcripts under ~/.claude/projects/… (127 files)
-step 3 > Redacting secrets (12 patterns) → cache .honne/cache/scan.json
-step 4 > Extracting 6 axes: lexicon, cadence, stance, ritual, antipattern, evolution
-step 5 > HITL per axis — [y]es / [n]o / [e]dit
+step 2 > scan transcripts under ~/.claude/projects/… → .honne/cache/scan.json
+         (secrets + Claude Code meta-preamble filtered during scan)
 
-        axis 1 · lexicon   : "일단", "~해볼게", frequent code-switch en↔ko  → [y/n/e]?
-user   > y
+step 3 > for each of 6 axes [lexicon, reaction, workflow, obsession, ritual, antipattern]:
+           - scripts/honne axis run <axis> --emit-hitl-block  → deterministic block
+           - echoed to user verbatim (quotes + candidate claim)
+           - arrow-key menu: y / n / edit
 
-        ... (axes 2–6 similarly) ...
+         축 1 — 어휘 (Lexicon)
+         반복되는 표현·코드스위칭·의성어로 이 후보를 수용할까요?
+         - [18d0e66e]   — …
+         candidate: …
+user   > [selects y]
 
-step 6 > Write persona snapshot + longitudinal claim assets?
-user   > y
+         ... (axes 2–6 similarly) ...
 
+step 4 > persona + report + longitudinal assets
 ✓ Saved: .honne/persona.json
 ✓ Saved: docs/honne.md
-✓ Appended: .honne/assets/claim.jsonl (6 entries)
+✓ Appended: .honne/assets/claims.jsonl
 ```
+
+All per-axis text is rendered by `scripts/honne axis run` from fixed templates in `skills/whoami/templates/axes.{ko,en,jp}.md`. Models do not generate the prompts — this keeps Haiku-class models from hallucinating the HITL copy.
 
 After ≥ 2 runs, you can compare past profiles:
 

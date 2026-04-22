@@ -1,7 +1,7 @@
 from typing import Union, Optional, List, Iterator
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -31,7 +31,7 @@ def record_claim(
         "support_count": support_count,
         "prior_id": prior_id,
         "quotes": json.loads(quotes_json) if quotes_json else [],
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

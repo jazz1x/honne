@@ -1,0 +1,12 @@
+2	ko	사용법 오류 — 인자를 확인하세요
+2	en	usage error — check arguments
+2	jp	使い方エラー — 引数を確認してください
+66	ko	입력 없음 — 트랜스크립트를 먼저 스캔하세요 (honne scan)
+66	en	no input — run `honne scan` first
+66	jp	入力なし — まず `honne scan` を実行
+71	ko	python3 환경이 준비되지 않음 — Python 3.9+ 설치 필요
+71	en	python3 unavailable — install Python 3.9+
+71	jp	python3 が見つからない — Python 3.9+ をインストール
+73	ko	.honne/ 디렉토리에 쓰기 권한이 없음
+73	en	.honne/ directory not writable
+73	jp	.honne/ ディレクトリに書き込めない
