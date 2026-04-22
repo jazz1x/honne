@@ -94,6 +94,37 @@ teardown() {
   [[ "$output" =~ "Pre-commit passed" ]]
 }
 
+# ---------- scan-transcripts.sh integration ----------
+
+@test "scan-transcripts.sh extracts messages from Claude Code format transcripts" {
+  mkdir -p "$HOME/.claude/projects"
+  PROJ_SLUG=$(pwd | sed 's|/|-|g' | sed 's|^-||')
+  PROJ_DIR="$HOME/.claude/projects/$PROJ_SLUG"
+  mkdir -p "$PROJ_DIR"
+
+  # Copy test fixture
+  cp "$REPO_ROOT/tests/fixtures/transcripts/test-session-1.jsonl" "$PROJ_DIR/"
+
+  # Scan with repo scope
+  run bash "$REPO_ROOT/scripts/scan-transcripts.sh" \
+    --scope repo --since "2020-01-01" --cache .honne/cache/scan.json
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "scanned 1 sessions" ]]
+
+  # Validate output structure
+  [ -f .honne/cache/scan.json ]
+  MESSAGE_COUNT=$(jq '.sessions[0].messages | length' .honne/cache/scan.json)
+  [[ "$MESSAGE_COUNT" -gt 0 ]]
+
+  # Validate message fields exist
+  jq '.sessions[0].messages[0] | has("role") and has("text") and has("ts")' .honne/cache/scan.json | grep -q "true"
+
+  # Validate user messages have content
+  USER_TEXT=$(jq -r '.sessions[0].messages[] | select(.role=="user") | .text' .honne/cache/scan.json | head -1)
+  [[ -n "$USER_TEXT" ]]
+}
+
 # ---------- sandbox self-check ----------
 
 @test "sandbox preflight aborts if HOME is not in a temp root" {
