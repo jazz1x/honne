@@ -70,7 +70,7 @@ This triggers the main orchestrator. On first invocation it will ask whether to 
 | Skill | Command | Aliases | Role |
 |-------|---------|---------|------|
 | **honne** | `/honne:honne` | `/honne:whoami` · `/honne:hon-me` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
-| **lexi** | `/honne:lexi` | — | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
+| **lexi** | `/honne:lexi` | `/honne:hon-word` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | `/honne:diff` · `/honne:hon-back` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
 Aliases come in two flavors: **semantic** (`whoami`, `diff`) for Unix-familiar entry points, and **brand-prefixed** (`hon-me`, `hon-back`) for harnish-style family visibility in the marketplace listing. Both redirect to the same core skill.
@@ -184,6 +184,7 @@ If any output causes distress, delete it — `bash scripts/purge.sh --all`. Your
 - **lexi** — lexicon + i (vocabulary axis only)
 - **compare** — retrospective diff, past vs present (no transcript re-scan)
 - **whoami** / **hon-me** — aliases for `honne`. `whoami` is Unix-familiar; `hon-me` follows harnish's `har-*` brand prefix convention.
+- **hon-word** — alias for `lexi`. Brand-prefix variant; reads as "honne, my words".
 - **diff** / **hon-back** — aliases for `compare`. `diff` is the universal term; `hon-back` reads as "honne, look back".
 
 ## Triad
