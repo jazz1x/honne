@@ -92,3 +92,59 @@ def test_fixture_file_all_markers_present(tmp_path):
     ]
     missing = [m for m in expected_markers if m not in out]
     assert not missing, f"fixture missed markers: {missing}"
+
+
+@pytest.mark.parametrize("raw,marker,leak", [
+    ("<task-notification>\n<task-id>abc</task-id>\n<output-file>/foo</output-file>\n</task-notification>",
+     "[REDACTED:cc-task]", "abc"),
+    ("<tool-use-id>toolu_018sT1m1GL1SMGv8MXprFm3W</tool-use-id>",
+     "[REDACTED:cc-meta]", "toolu_018sT1m1GL1SMGv8MXprFm3W"),
+    ("see toolu_01ABCDEFGHIJKLMNOPQRST in payload",
+     "[REDACTED:tool-use-id]", "toolu_01ABCDEFGHIJKLMNOPQRST"),
+    ("output at /private/tmp/claude-501/foo/bar",
+     "[REDACTED:cc-tmp]", "claude-501/foo"),
+])
+def test_cc_system_payload_redacted(raw, marker, leak):
+    out = _redact.redact(raw)
+    assert marker in out
+    assert leak not in out
+
+
+def test_extract_tokenize_filters_stopwords_and_short():
+    """extract.py _tokenize: filters stopwords, length<3, and digits."""
+    import sys as _sys
+    from pathlib import Path as _P
+    _sys.path.insert(0, str(_P(__file__).parent.parent / "scripts"))
+    from honne_py.extract import _tokenize
+    text = "the docs are in md and json files; render context properly 123"
+    toks = list(_tokenize(text))
+    # Stopwords/extensions/short dropped
+    for stop in ["the", "are", "in", "and", "md", "docs", "json"]:
+        assert stop not in toks, f"{stop} should be filtered"
+    # Real content survives
+    assert "render" in toks
+    assert "context" in toks
+    assert "properly" in toks
+    # Digits are excluded
+    assert "123" not in toks
+
+
+def test_scan_started_at_uses_timestamp_field(tmp_path):
+    """scan.py: session.started_at must be filled from JSONL 'timestamp' (not 'ts')."""
+    import sys as _sys, json as _json
+    from pathlib import Path as _P
+    _sys.path.insert(0, str(_P(__file__).parent.parent / "scripts"))
+    from honne_py.scan import _parse_jsonl
+    fixture = tmp_path / "session.jsonl"
+    line = {
+        "type": "user", "operation": "msg",
+        "timestamp": "2026-04-23T01:00:00Z",
+        "sessionId": "sess-test-1234",
+        "cwd": "/tmp/proj",
+        "message": {"role": "user", "content": "hello world"},
+    }
+    fixture.write_text(_json.dumps(line) + "\n", encoding="utf-8")
+    sess = _parse_jsonl(fixture, redact_secrets=False)
+    assert sess is not None
+    assert sess["started_at"] == "2026-04-23T01:00:00Z", \
+        f"started_at empty (regression): got {sess['started_at']!r}"

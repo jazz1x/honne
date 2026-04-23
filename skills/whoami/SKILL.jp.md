@@ -2,131 +2,108 @@
 name: whoami
 version: 0.0.1
 description: >
-  ローカルLLMトランスクリプトから6軸自己観察をオーケストレートします。
-  証拠に基づくペルソナと軸ごとのHITL承認。
+  ローカルLLMトランスクリプトから6軸の自己観察を編成します。
+  自律的な証拠収集 + LLM合成ナラティブ。
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
 # honne — 6軸自己観察
 
-## ステップ1: スコープHITL
+**呼び出されたら、ステップ1からステップ7まで順番に実行してください。スキルを説明したり、ユーザーが何を望むかを尋ねたりしないでください — 呼び出し自体がリクエストです。ステップ1の質問から始めてください。**
 
-ユーザーに問い合わせます: "スキャンスコープ — `repo` (現在のプロジェクト) または `global` (すべてのプロジェクト)?"
+## ステップ1: 範囲 + 言語HITL
 
-明示的な `repo` または `global` を待ちます。曖昧な回答 → 再度質問します。
+`AskUserQuestion`ツールを呼び出して、1回の呼び出しに2つの質問を含めます:
 
-## ステップ2: トランスクリプトスキャン
+(a) 範囲:
+- `question`: "スキャン範囲?"
+- `options`: `[{"label":"repo","description":"現在のプロジェクトのみ"},{"label":"global","description":"すべてのプロジェクト"}]`
 
-実行します:
+(b) 言語:
+- `question`: "言語?"
+- `options`: `[{"label":"ko","description":"한국어"},{"label":"en","description":"English"},{"label":"jp","description":"日本語"}]`
+
+2つの回答から `SCOPE` と `LOCALE` を設定します。プレーンテキストQAを使用しないでください — 矢印キー選択のみ。
+
+## ステップ2: スキャン
+実行: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" scan --scope "$SCOPE" --cache ".honne/cache/scan.json"`
+結果から `RUN_ID` をキャプチャ: `RUN_ID=$(python3 -c 'import json; print(json.load(open(".honne/cache/scan.json"))["run_id"])')`
+ゼロ以外の終了 → stdout+stderrをユーザーに正確に出力、停止。終了コードを解釈しないでください。
+
+## ステップ3: 却下の再フレーミングフィルタ (候補をスキップ)
+各軸について、`bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --tag "<axis>" --type rejection --scope "$SCOPE"`を実行します。
+ステップ4で各軸を記録する前に、候補を `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"` にパイプします — exit 3 = 重複、スキップして「再フレーミング」をログします。すべての変数は大きなダブルクォートで引用する必要があります(空白・特殊文字の安全性)。LLM呼び出しなし。
+
+## ステップ4: 軸ごとの自律的な記録
+
+`axis list` の各軸について:
+
 ```bash
-HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
-bash "$HONNE_ROOT/scripts/scan-transcripts.sh" \
-  --scope "$SCOPE" --since "2020-01-01" \
-  --cache ".honne/cache/scan.json" \
-  --index-ref ".honne/cache/index.json" \
-  --redact-secrets
+AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
+  --locale "$LOCALE" --scan .honne/cache/scan.json)
+
+# 根拠が不十分な場合はスキップ
+if echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"; then
+  continue
+fi
+
+# 候補と根拠を抽出
+CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
+QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
+
+# 主張を記録
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
+  --type claim --axis "$axis" --scope "$SCOPE" \
+  --claim "$CANDIDATE" --run-id "$RUN_ID" \
+  --quotes-json "$QUOTES_JSON" \
+  --out ".honne/assets/claims.jsonl"
+done
 ```
 
-exit 2 (トランスクリプトなし) の場合 → "十分なデータがありません。スコープを変更しますか?" を報告 → 終了します。
+## ステップ5: LLMナラティブ合成
 
-## ステップ3: HITL前の拒否リフレーム フィルター
+Claude (あなた自身の精神的推論) を呼び出して、説明と一行評を合成します:
 
-各軸について:
+(a) 合成プロンプトを読む: `Read "${CLAUDE_PLUGIN_ROOT}/skills/whoami/templates/synthesis_prompt.${LOCALE}.md"`
+
+(b) マッチした主張を抽出:
 ```bash
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
-  --tag "<axis>" --type rejection --scope "$SCOPE" --out stdout
+USER_PAYLOAD=$(python3 -c "
+import json
+claims = [json.loads(l) for l in open('.honne/assets/claims.jsonl') if l.strip()]
+matched = [c for c in claims if c.get('run_id')=='${RUN_ID}' and c.get('scope')=='${SCOPE}']
+AXES = ['lexicon','reaction','workflow','obsession','ritual','antipattern']
+payload = {'locale':'${LOCALE}','claims':{}}
+for ax in AXES:
+    found = [c for c in matched if c.get('axis')==ax]
+    payload['claims'][ax] = {'claim': found[0]['claim'], 'evidence_count': len(found[0].get('quotes', []))} if found else None
+print(json.dumps(payload, ensure_ascii=False))
+")
 ```
 
-過去の拒否をメモリに格納します (注入されません)。HITL主張を提示する前に「スキップ候補」フィルターとして使用します。候補主張テキストが過去の拒否と大きく重なる場合は、リフレーム またはログとともにスキップします。
+(c) 合成: 合成プロンプトシステム指示を自身に適用 + USER_PAYLOADをユーザー入力として。STRICT JSON応答を生成。
 
-## ステップ4: 軸ごとの処理
+(d) 結果を保存: JSON応答を `.honne/cache/narrative.json` に `Write` ツールで保存。JSON解析失敗または空の応答の場合、保存をスキップ (narrative.jsonが生成されない)。
 
-[語彙、反応、ワークフロー、執着、儀式、アンチパターン] の各軸に対して:
-- 統計抽出 (語彙 → extract-lexicon.sh; 執着 → detect-recurrence.sh; その他 → このスキル内の内部ロジック)
-- LLM要約 (evidence-gather出力への参照が必須)
-- HITL: 引用付きで主張を提示し、(y / n / 編集) を尋ねます。曖昧 → 再度質問します。
-- y → record-claim.sh --type claim ...
-- n → record-claim.sh --type rejection ...
-- edit → 編集されたテキストを使用、record-claim.sh --type claim ...
+## ステップ6: ペルソナとレポートをレンダリング
 
-## ステップ5: .honne/persona.json を保存
+```bash
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona \
+  --claims .honne/assets/claims.jsonl \
+  --scope "$SCOPE" --locale "$LOCALE" --run-id "$RUN_ID" --now "$NOW" \
+  --narrative .honne/cache/narrative.json \
+  --out .honne/persona.json
 
-architecture PRD §3.2スキーマ。承認された軸のみ。
-
-## ステップ6: docs/honne.md をレンダリング
-
-人間が読める報告書。すべての主張には ≥ 1個の引用が必要または [insufficient evidence] でマークされている必要があります。
-
-禁止フレーズ (ホロスコープ): "at times", "sometimes", "in certain situations", "때로는", "상황에 따라", "적절히".
-
-## ステップ7: 進化リンク (2回目以降の実行)
-
-.honne/assets/claim.jsonlにこの実行前のエントリがある場合:
-- query-assets.sh --tag <axis> --type claim --scope "$SCOPE" --until <this-run-ts>
-- LLM ペア分類器: {past_claim, present_claim} → label ∈ {identical, evolved, reversed, unrelated} with confidence
-- confidence < 0.7 → unrelated
-- identical → 現在の主張資産にprior_idを設定、新しい進化なし
-- evolved / reversed → record-claim.sh --type evolution --prior-id <past> ...
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render report \
+  --persona .honne/persona.json --locale "$LOCALE" --out docs/honne.md
+```
 
 ## 完了
+`.honne/persona.json` と `docs/honne.md` に保存されたファイルを報告します。 `/honne:compare` を使用して過去の観察を確認します。
 
-保存されたファイルを報告 + ユーザーに注記: "/honne:compare to review past."
+次のアクション提案をユーザーに出力します：
 
-## LLM Prompt Templates
-
-### Pair classifier (Step 7)
-
-When comparing past vs present claim within same axis:
-
-```
-System: You classify the relationship between two evidence-backed claims about the same user on the same axis.
-
-Input:
-  Axis: {axis}
-  Past claim (recorded {past_ts}): "{past_claim}"
-  Present claim (recorded {present_ts}): "{present_claim}"
-
-Labels:
-  - identical: same observation, different wording
-  - evolved:   same axis, concrete content changed (vocabulary substitution OR frequency shift OR scope expansion)
-  - reversed:  present observation contradicts past observation
-  - unrelated: observations about different phenomena
-
-Respond with JSON only:
-  { "label": "<one-of-four>", "confidence": <0.0-1.0>, "rationale": "<one short sentence>" }
-
-Rule: if confidence < 0.7, force label = "unrelated".
-```
-
-### Rejection overlap detector (Step 3)
-
-When deciding whether to skip a candidate claim due to past rejection:
-
-```
-System: Decide whether the present candidate claim overlaps semantically with a past rejected claim (same user, same axis).
-
-Input:
-  Axis: {axis}
-  Past rejection (recorded {past_ts}): "{past_rejection}"
-  Present candidate: "{present_candidate}"
-
-Respond with JSON only:
-  { "overlap": true | false, "confidence": <0.0-1.0>, "rationale": "<one short sentence>" }
-
-Rule: overlap=true only if confidence >= 0.7. Otherwise proceed with the present candidate as-is.
-```
-
-### Horoscope guard (Step 6)
-
-Before writing a claim into docs/honne.md, self-check:
-
-```
-System: Does the following claim contain any horoscope-style hedge? (vague time qualifiers, vague universals, phrases like "sometimes", "at times", "generally", "in certain situations", or Korean "때로는"/"상황에 따라"/"적절히", or Japanese "時に"/"場合によって")
-
-Input: "{claim_text}"
-
-Respond JSON only:
-  { "horoscope": true | false, "matched_phrase": "<str or empty>" }
-
-If horoscope=true, the claim is rejected and the axis item is marked [insufficient evidence].
-```
+**次のアクション提案** *(該当スキルは追加予定です。)*
+- このパターンを基に自分の分身（ペルソナ）を実装してみる
+- トークン節約のための自分の習慣を探ってみる

@@ -1,5 +1,6 @@
 from typing import Union, Optional, List, Iterator
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -16,30 +17,56 @@ def query(
     out_path: Union[Path, str] = None,
 ) -> int:
     """Query assets with filters."""
-    base_dir = Path(base_dir) if base_dir else Path.cwd() / ".harnish"
+    base_dir = Path(base_dir) if base_dir else Path.cwd() / ".honne"
 
-    # Load assets from .harnish directory
+    # Load assets from base_dir/.honne directory
     result = []
     asset_dir = base_dir / "assets"
+
+    # Graceful fallback: missing base_dir or assets dir
     if not base_dir.exists():
-        return 2  # base_dir missing is a genuine error
-    if asset_dir.exists():
-        for asset_file in asset_dir.glob("*.jsonl"):
-            with open(asset_file) as f:
-                for line in f:
-                    if not line.strip():
-                        continue
+        print(json.dumps([]))
+        return 0
+    if not asset_dir.exists():
+        print(json.dumps([]))
+        return 0
+
+    # Type to file mapping
+    type_to_file = {
+        "claim": "claims.jsonl",
+        "rejection": "rejections.jsonl",
+        "evolution": "evolutions.jsonl",
+    }
+    target_file = asset_dir / type_to_file.get(type_, "claims.jsonl")
+
+    if not target_file.exists():
+        print(json.dumps([]))
+        return 0
+
+    # Load and filter
+    try:
+        with open(target_file) as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
                     obj = json.loads(line)
+                except json.JSONDecodeError:
+                    sys.stderr.write(f"warning: skipping malformed line\n")
+                    continue
 
-                    # Apply filters
-                    if type_ and obj.get("type") != type_:
-                        continue
-                    if since and obj.get("created_at", "") < since:
-                        continue
-                    if until and obj.get("created_at", "") > until:
-                        continue
+                # Apply filters (type is already partitioned by target_file)
+                if since and obj.get("created_at", "") < since:
+                    continue
+                if until and obj.get("created_at", "") > until:
+                    continue
 
-                    result.append(obj)
+                result.append(obj)
+    except Exception as e:
+        sys.stderr.write(f"error: {e}\n")
+        return 1
+
+    print(json.dumps(result))
 
     if out_path:
         out_path = Path(out_path)

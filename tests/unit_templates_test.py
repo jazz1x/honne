@@ -15,7 +15,7 @@ AXES_LABELS = {
     "workflow":    {"ko": "워크플로", "en": "Workflow",    "jp": "ワークフロー"},
     "obsession":   {"ko": "집착",     "en": "Obsession",   "jp": "執着"},
     "ritual":      {"ko": "의식",     "en": "Ritual",      "jp": "儀式"},
-    "antipattern": {"ko": "반패턴",   "en": "Antipattern", "jp": "アンチパターン"},
+    "antipattern": {"ko": "비효율 패턴",   "en": "Antipattern", "jp": "アンチパターン"},
 }
 FORBIDDEN_LABELS = {"녹동", "뛈글", "맨듭니다"}
 

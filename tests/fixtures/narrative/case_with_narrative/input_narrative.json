@@ -1,0 +1,11 @@
+{
+  "axes": {
+    "lexicon": "특정 키워드를 반복적으로 사용하는 패턴이 있다. 도메인 어휘가 고착화되는 신호.",
+    "reaction": null,
+    "workflow": "scan→extract→record 시퀀스가 일관됨. 파이프라인적 사고를 선호함.",
+    "obsession": null,
+    "ritual": null,
+    "antipattern": null
+  },
+  "oneliner": "어휘는 도메인에 묶이고, 작업은 단계 분해로 환원된다."
+}

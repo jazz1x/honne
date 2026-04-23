@@ -181,3 +181,57 @@ def test_purge_unknown_arg():
 def test_precommit(tmp_path):
     with patch("honne_py.precommit.precommit", return_value=0):
         main(["precommit"])
+
+
+# ── render persona narrative inject (CLI integration) ────────────────────────
+
+def test_cli_render_persona_passes_narrative(tmp_path):
+    """CLI must forward --narrative to render_persona; regression for v2 silent drop."""
+    import json
+    claims = tmp_path / "claims.jsonl"
+    narrative = tmp_path / "narrative.json"
+    out = tmp_path / "persona.json"
+
+    claims.write_text(json.dumps({
+        "id": "c1", "type": "claim", "axis": "lexicon", "scope": "repo",
+        "run_id": "r1", "claim": "test claim",
+        "quotes": [{"session_id": "s1", "ts": "2026-01-01T00:00:00Z",
+                    "text": "x", "frequency": 1, "key": "x"}],
+        "created_at": "2026-01-01T00:00:00Z",
+    }) + "\n", encoding="utf-8")
+    narrative.write_text(json.dumps({
+        "axes": {"lexicon": "expected explanation",
+                 "reaction": None, "workflow": None,
+                 "obsession": None, "ritual": None, "antipattern": None},
+        "oneliner": "expected oneliner",
+    }), encoding="utf-8")
+
+    rc = main(["render", "persona",
+               "--claims", str(claims), "--scope", "repo", "--locale", "ko",
+               "--run-id", "r1", "--now", "2026-01-01T00:00:00Z",
+               "--narrative", str(narrative), "--out", str(out)])
+    assert rc == 0
+    persona = json.loads(out.read_text(encoding="utf-8"))
+    assert persona["oneliner"] == "expected oneliner", \
+        "CLI dropped --narrative — render_persona received no narrative_path"
+    assert persona["axes"]["lexicon"]["explanation"] == "expected explanation"
+
+
+# ── ritual frequency (counters lookup) ───────────────────────────────────────
+
+def test_summarize_ritual_uses_counters_for_frequency():
+    """summarize_ritual must read frequency from signal['counters'][key], not from top_examples."""
+    from honne_py.summarize import summarize_ritual
+    signal = {
+        "counters": {"task_description": 390, "question": 9, "direct_command": 3},
+        "top_examples": [
+            {"key": "task_description", "first_text": "do the thing",
+             "first_session_id": "s1", "first_ts": "t1"},
+            {"key": "question", "first_text": "what is this?",
+             "first_session_id": "s2", "first_ts": "t2"},
+        ],
+    }
+    out = summarize_ritual(signal, "ko")
+    assert "(390)" in out, f"frequency 390 missing — counters lookup broken: {out!r}"
+    assert "(9)" in out
+    assert "(0)" not in out, f"freq=0 leak (regression): {out!r}"

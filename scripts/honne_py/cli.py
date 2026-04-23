@@ -33,6 +33,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     scan_parser.add_argument("--index-ref", required=False)
     scan_parser.add_argument("--redact", action="store_true", default=True)
     scan_parser.add_argument("--base-dir", required=False)
+    scan_parser.add_argument("--run-id", required=False)
 
     # extract lexicon
     extract_parser = subparsers.add_parser("extract", help="extract patterns")
@@ -89,6 +90,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     claim_parser.add_argument("--support-count", type=int, required=False)
     claim_parser.add_argument("--prior-id", required=False)
     claim_parser.add_argument("--quotes-json", required=False)
+    claim_parser.add_argument("--run-id", required=False)
 
     # purge
     purge_parser = subparsers.add_parser("purge", help="purge cache")
@@ -109,6 +111,22 @@ def main(argv: Optional[List[str]] = None) -> int:
     axis_val.add_argument("--locale", required=True)
     axis_val.add_argument("--skip-if-overlaps", required=False)
     axis_sub.add_parser("list")
+
+    # render persona/report
+    render_parser = subparsers.add_parser("render", help="render persona/report")
+    render_sub = render_parser.add_subparsers(dest="subcommand", parser_class=_Parser)
+    persona_p = render_sub.add_parser("persona")
+    persona_p.add_argument("--claims", required=True)
+    persona_p.add_argument("--scope", required=True, choices=["repo", "global"])
+    persona_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
+    persona_p.add_argument("--run-id", required=True)
+    persona_p.add_argument("--now", required=True)
+    persona_p.add_argument("--out", required=True)
+    persona_p.add_argument("--narrative", required=False)
+    report_p = render_sub.add_parser("report")
+    report_p.add_argument("--persona", required=True)
+    report_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
+    report_p.add_argument("--out", required=True)
 
     # doctor
     subparsers.add_parser("doctor", help="environment health check")
@@ -131,6 +149,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             cache=args.cache,
             index_ref=args.index_ref,
             redact_secrets=args.redact,
+            run_id=args.run_id,
         )
 
     elif args.command == "extract" and args.axis == "lexicon":
@@ -191,6 +210,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             support_count=args.support_count,
             prior_id=args.prior_id,
             quotes_json=args.quotes_json,
+            run_id=args.run_id,
         )
 
     elif args.command == "purge":
@@ -220,6 +240,26 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .axis import AXES
         print("\n".join(AXES))
         return 0
+
+    elif args.command == "render" and args.subcommand == "persona":
+        from .render import render_persona
+        return render_persona(
+            claims_path=args.claims,
+            scope=args.scope,
+            locale=args.locale,
+            run_id=args.run_id,
+            now=args.now,
+            out_path=args.out,
+            narrative_path=args.narrative,
+        )
+
+    elif args.command == "render" and args.subcommand == "report":
+        from .render import render_report
+        return render_report(
+            persona_path=args.persona,
+            locale=args.locale,
+            out_path=args.out,
+        )
 
     elif args.command == "doctor":
         from .doctor import main as doctor_main

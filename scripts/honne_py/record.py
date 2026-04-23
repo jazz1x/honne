@@ -14,6 +14,7 @@ def record_claim(
     support_count: int = 1,
     prior_id: str = None,
     quotes_json: str = None,
+    run_id: Optional[str] = None,
 ) -> int:
     """Record a claim to JSONL."""
     out_path = Path(out_path)
@@ -27,6 +28,7 @@ def record_claim(
         "type": type_,
         "axis": axis,
         "scope": scope,
+        "run_id": run_id,
         "claim": claim,
         "support_count": support_count,
         "prior_id": prior_id,
@@ -52,6 +54,7 @@ if __name__ == "__main__":
     parser.add_argument("--support-count", type=int, default=1)
     parser.add_argument("--prior-id")
     parser.add_argument("--quotes-json")
+    parser.add_argument("--run-id")
     args = parser.parse_args()
     exit(record_claim(
         args.type,
@@ -62,4 +65,5 @@ if __name__ == "__main__":
         args.support_count,
         args.prior_id,
         args.quotes_json,
+        args.run_id,
     ))

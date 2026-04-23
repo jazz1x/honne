@@ -3,6 +3,7 @@ import os
 import sys
 import tempfile
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Iterator, Union, Optional
@@ -46,6 +47,7 @@ def run_scan(
     index_ref: Optional[Union[Path, str]] = None,
     redact_secrets: bool = True,
     base_dir: Optional[Union[Path, str]] = None,
+    run_id: Optional[str] = None,
 ) -> int:
     """Scan transcripts from scope, write to cache JSONL.
 
@@ -53,6 +55,8 @@ def run_scan(
     Emits progress to stderr: [scan] N/M every 100 files or 5 seconds.
     """
     cache = Path(cache)
+    if run_id is None:
+        run_id = uuid.uuid4().hex
     index_ref = Path(index_ref) if index_ref else None
 
     # Scope → path resolution
@@ -138,6 +142,7 @@ def run_scan(
 
     # Write cache atomically
     result = {
+        "run_id": run_id,
         "scope": scope,
         "scanned_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "sessions": sessions,
@@ -216,7 +221,7 @@ def _parse_jsonl(jsonl_path: Path, redact_secrets: bool = True) -> Optional[dict
             first_obj = json.loads(first_line)
             session_id = first_obj.get("sessionId", "")
             cwd = first_obj.get("cwd", "")
-            started_at = first_obj.get("ts", "")
+            started_at = first_obj.get("timestamp", "")
         except Exception:
             return None
 
