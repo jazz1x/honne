@@ -1,0 +1,45 @@
+## header
+
+# honne — 자기관찰 보고서
+
+- **생성**: {generated_at}
+- **범위**: {scope} | **언어**: {locale} | **run**: {run_id_short}
+
+---
+
+## axis_block
+
+## {axis_header}
+
+**요약**: {claim}
+
+**해설**: {axis_explanation}
+
+## quote_line
+
+> [{quote_session}] {quote_ts} — {quote_text} _(freq: {quote_freq})_
+
+## insufficient_block
+
+## {axis_header}
+
+[근거 부족]
+
+## footer
+
+---
+
+## 종합 분석
+
+{oneliner}
+
+## next_actions
+
+---
+
+## 다음 액션 제안
+
+- 이 형태로 나의 분신(페르소나) 구현해보기
+- 토큰 절약을 위한 나의 습관 탐색해보기
+
+*(해당 스킬들이 추가될 예정입니다.)*

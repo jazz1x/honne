@@ -152,9 +152,10 @@ teardown() {
   [ "$status" -eq 1 ]
 }
 
-@test "query-assets.sh exits 2 when .honne missing" {
-  run bash "$REPO_ROOT/scripts/query-assets.sh" --out /tmp/q.json
-  [ "$status" -eq 2 ]
+@test "query-assets.sh exits 0 with empty result when .honne missing" {
+  run bash "$REPO_ROOT/scripts/query-assets.sh" --type claim
+  [ "$status" -eq 0 ]
+  [ "$output" = "[]" ]
 }
 
 # ---------- sandbox self-check ----------

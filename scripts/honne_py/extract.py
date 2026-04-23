@@ -420,8 +420,37 @@ REACTION_PATTERNS: dict = {
 }
 
 
+_STOPWORDS = frozenset({
+    # English function words
+    "the","a","an","and","or","but","if","so","not","no","yes",
+    "in","on","at","to","of","for","with","by","from","as","into","onto",
+    "is","are","was","were","be","been","being","am",
+    "have","has","had","having","do","does","did","doing","done",
+    "will","would","should","can","could","may","might","must","shall",
+    "this","that","these","those","there","here","then","than","when","where","why","how","what","who","which",
+    "i","you","he","she","it","we","they","me","him","her","us","them",
+    "my","your","his","its","our","their","mine","yours","ours","theirs",
+    "all","any","both","each","few","more","most","other","some","such","only","own","same","very",
+    "out","up","down","over","under","off","about","again","also","just",
+    # Code/file extensions and common technical noise
+    "md","py","js","ts","tsx","jsx","sh","json","jsonl","yml","yaml","txt","html","css",
+    "src","lib","bin","dir","tmp","log","logs","conf","env","docs","doc","file","files","path","paths","code",
+    # Common Korean particles/fillers (when accidentally tokenized standalone)
+    "그","이","저","것","수","등","및","좀","더","잘","또",
+    # Common Japanese fillers (when standalone)
+    "の","は","が","を","に","で","と","も","から","まで",
+})
+
+_TOKEN_RE = re.compile(r'[^\W_\d]+', re.UNICODE)
+
+
 def _tokenize(text: str) -> Iterator[str]:
-    """Tokenize text to lowercase words (Unicode-aware)."""
-    token_re = re.compile(r'[^\W_]+', re.UNICODE)
-    for match in token_re.finditer(text):
-        yield match.group().lower()
+    """Tokenize text to lowercase words (Unicode-aware).
+
+    Filters: min length 3, alphabetic only (no digits), not in stopword set.
+    """
+    for match in _TOKEN_RE.finditer(text):
+        tok = match.group().lower()
+        if len(tok) < 3 or tok in _STOPWORDS:
+            continue
+        yield tok

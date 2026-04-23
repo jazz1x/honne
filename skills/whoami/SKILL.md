@@ -3,7 +3,7 @@ name: whoami
 version: 0.0.1
 description: >
   Orchestrate 6-axis self-observation from local LLM transcripts.
-  Evidence-backed persona with per-axis HITL approval.
+  Autonomous evidence gathering + LLM-synthesized narrative.
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
@@ -27,43 +27,83 @@ Set `SCOPE` and `LOCALE` from the two replies. Do not use plain-text Q&A — arr
 
 ## Step 2: Scan
 Run: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" scan --scope "$SCOPE" --cache ".honne/cache/scan.json"`
+Capture `RUN_ID` from result: `RUN_ID=$(python3 -c 'import json; print(json.load(open(".honne/cache/scan.json"))["run_id"])')`
 Non-zero exit → output stdout+stderr verbatim to user, stop. Do not interpret exit codes.
 
 ## Step 3: Rejection reframe filter (skip candidate)
 For each axis, run: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --tag "<axis>" --type rejection --scope "$SCOPE"`
-Before Step 4's HITL for each axis, pipe the candidate through `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"` — exit 3 = overlap, skip HITL and log "reframed". 모든 변수는 큰따옴표 인용 필수(공백·특수문자 안전). LLM 호출 없음.
+Before Step 4 records each axis, pipe the candidate through `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"` — exit 3 = overlap, skip and log "reframed". 모든 변수는 큰따옴표 인용 필수(공백·특수문자 안전). LLM 호출 없음.
 
-## Step 4: Per-axis HITL
+## Step 4: Per-axis autonomous record
 
 For each axis from `axis list`:
 
-(a) Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" --locale "$LOCALE" --scan .honne/cache/scan.json --emit-hitl-block`. Capture stdout as `$block`.
+```bash
+AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
+  --locale "$LOCALE" --scan .honne/cache/scan.json)
 
-(b) **Output `$block` to the user EXACTLY as received. Do not paraphrase, shorten, translate, or prepend labels like "Respond:". Do not re-render in your own words. Echo only.** If `$block` shows `[insufficient evidence]`, skip (c) and proceed to next axis.
+# Skip if insufficient evidence
+if echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"; then
+  continue
+fi
 
-(c) Invoke `AskUserQuestion` tool with:
-- `question`: "Accept this claim?"
-- `options`: `[{"label":"y","description":"accept"},{"label":"n","description":"reject"},{"label":"edit","description":"rephrase"}]`
+# Extract candidate and quotes
+CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
+QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
 
-(d) Handle reply:
-- `y` → run:
-  ```
-  bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
-    --type claim --axis "$axis" --scope "$SCOPE" \
-    --claim "$candidate" --out ".honne/assets/claims.jsonl"
-  ```
-  `$candidate` is the `candidate` field from `axis run` JSON mode (run without `--emit-hitl-block` to get JSON).
-- `n` → same command but `--type rejection` and `--out ".honne/assets/rejections.jsonl"`, `--claim "$candidate"`.
-- `edit` → ask user for replacement text `$edited`, validate via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$edited" --locale "$LOCALE"`. Exit 0 → record as claim with `--claim "$edited"`. Non-zero → show user the stderr and re-ask for edit.
+# Record claim
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
+  --type claim --axis "$axis" --scope "$SCOPE" \
+  --claim "$CANDIDATE" --run-id "$RUN_ID" \
+  --quotes-json "$QUOTES_JSON" \
+  --out ".honne/assets/claims.jsonl"
+done
+```
 
-## Step 5: Save persona
-Approved axes only → `.honne/persona.json`.
+## Step 5: LLM narrative synthesis
 
-## Step 6: Render docs/honne.md
-Quotes required per claim (axis run already guarantees). No model paraphrase.
+Invoke Claude (your own mental reasoning) to synthesize explanations and a one-liner:
 
-## Step 7: Evolution link (2nd+ run)
-`honne query --tag <axis> --type claim --scope "$SCOPE" --until <ts>` → pair classifier (LLM, external to axis.py).
+(a) Read synthesis prompt: `Read "${CLAUDE_PLUGIN_ROOT}/skills/whoami/templates/synthesis_prompt.${LOCALE}.md"`
+
+(b) Extract matched claims:
+```bash
+USER_PAYLOAD=$(python3 -c "
+import json
+claims = [json.loads(l) for l in open('.honne/assets/claims.jsonl') if l.strip()]
+matched = [c for c in claims if c.get('run_id')=='${RUN_ID}' and c.get('scope')=='${SCOPE}']
+AXES = ['lexicon','reaction','workflow','obsession','ritual','antipattern']
+payload = {'locale':'${LOCALE}','claims':{}}
+for ax in AXES:
+    found = [c for c in matched if c.get('axis')==ax]
+    payload['claims'][ax] = {'claim': found[0]['claim'], 'evidence_count': len(found[0].get('quotes', []))} if found else None
+print(json.dumps(payload, ensure_ascii=False))
+")
+```
+
+(c) Synthesize: Apply synthesis_prompt system instructions to yourself + USER_PAYLOAD as user input. Produce STRICT JSON response.
+
+(d) Save result: `Write` the JSON response to `.honne/cache/narrative.json`. If JSON parse fails or response is empty, skip saving (narrative.json remains absent).
+
+## Step 6: Render persona and report
+
+```bash
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona \
+  --claims .honne/assets/claims.jsonl \
+  --scope "$SCOPE" --locale "$LOCALE" --run-id "$RUN_ID" --now "$NOW" \
+  --narrative .honne/cache/narrative.json \
+  --out .honne/persona.json
+
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render report \
+  --persona .honne/persona.json --locale "$LOCALE" --out docs/honne.md
+```
 
 ## Completion
-Report saved files. "/honne:compare to review past."
+Report saved files to `.honne/persona.json` and `docs/honne.md`. Use `/honne:compare` to review past observations.
+
+Output the following next action suggestions to the user:
+
+**다음 액션 제안** *(해당 스킬들이 추가될 예정입니다.)*
+- 이 형태로 나의 분신(페르소나) 구현해보기
+- 토큰 절약을 위한 나의 습관 탐색해보기

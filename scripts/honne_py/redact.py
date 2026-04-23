@@ -3,6 +3,11 @@ import re
 __all__ = ["redact"]
 
 PATTERNS = [
+    # Claude Code system payloads (task-notification blocks, tool-use IDs, internal paths)
+    (re.compile(r'<task-notification>.*?</task-notification>', re.DOTALL), '[REDACTED:cc-task]'),
+    (re.compile(r'<(?:task-id|tool-use-id|output-file)>[^<]*</(?:task-id|tool-use-id|output-file)>'), '[REDACTED:cc-meta]'),
+    (re.compile(r'\btoolu_[A-Za-z0-9]{20,}'), '[REDACTED:tool-use-id]'),
+    (re.compile(r'/private/tmp/claude-\d+/[^\s]*'), '[REDACTED:cc-tmp]'),
     # API keys / cloud tokens
     (re.compile(r'(sk-|pk_)[a-zA-Z0-9_-]{20,}'),                          '[REDACTED:api-key]'),
     (re.compile(r'AKIA[0-9A-Z]{16}'),                                     '[REDACTED:aws]'),

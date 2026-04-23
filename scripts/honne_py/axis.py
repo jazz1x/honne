@@ -3,7 +3,7 @@ from typing import Optional
 import json
 import re
 import sys
-from . import extract, io as honne_io
+from . import extract, io as honne_io, summarize
 
 AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern")
 LOCALES = ("ko", "en", "jp")
@@ -205,6 +205,8 @@ def collect_quotes(scan_path: Path, axis: str, signal: dict, k: int = 3) -> list
         if quote is None:
             continue
         text = quote["text"]
+        if not text.strip():
+            continue
         if text in seen_texts_lr:
             continue
         seen_texts_lr.add(text)
@@ -294,11 +296,20 @@ def run(name: str, locale: str, scan_path: Path,
         sys.stderr.write(f"template error: {e}\n")
         return 2
 
-    if not quotes:
+    # Map summarize functions
+    _SUM = {
+        "lexicon": summarize.summarize_lexicon,
+        "reaction": summarize.summarize_reaction,
+        "workflow": summarize.summarize_workflow,
+        "obsession": summarize.summarize_obsession,
+        "ritual": summarize.summarize_ritual,
+        "antipattern": summarize.summarize_antipattern,
+    }
+    candidate = _SUM[name](signal, locale)
+    if not candidate:
         out = {"axis": name, "quotes": [], "candidate_claim": None,
                "insufficient_evidence": True}
     else:
-        candidate = tpl["connective"].join(q["text"] for q in quotes)
         out = {"axis": name, "quotes": quotes, "candidate_claim": candidate,
                "insufficient_evidence": False}
 

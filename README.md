@@ -8,7 +8,7 @@
 
 **honne** (本音, "true voice") — a local, evidence-backed mirror of how you actually work with LLMs. Beneath the official persona (*tatemae*) surfaces what your transcripts quietly record: recurring vocabulary, rejected suggestions, session rituals, the patterns you never named.
 
-Everything runs locally. No network calls, no analytics. Every claim is HITL-approved before it enters your persona file. Your data lives under `.honne/` as plain JSONL — portable, inspectable, deletable.
+Everything runs locally. No network calls, no analytics. Claims are recorded autonomously and explained via LLM narrative synthesis. Your data lives under `.honne/` as plain JSONL — portable, inspectable, deletable.
 
 [한국어](./README.ko.md) · [日本語](./README.jp.md)
 
@@ -16,7 +16,7 @@ Everything runs locally. No network calls, no analytics. Every claim is HITL-app
 
 | Skill | Command | Role |
 |-------|---------|------|
-| **whoami** | `/honne:whoami` | Main orchestrator. 6-axis persona with per-axis HITL approval. |
+| **whoami** | `/honne:whoami` | Main orchestrator. 6-axis persona with autonomous evidence gathering and LLM narrative synthesis. |
 | **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
@@ -25,15 +25,15 @@ Each skill operates in its own orbit, connected only through **shared artifacts 
 ```
  transcripts (~/.claude/projects/**/*.jsonl)
       │
-      │  honne  ──→  persona.json + docs/honne.md  (6-axis snapshot)
+      │  honne  ──→  .honne/persona.json + docs/honne.md  (6-axis snapshot)
       │                  │
-      │                  ├── record-claim.sh  ──→  .honne/assets/*.jsonl (longitudinal)
+      │                  ├── honne record claim  ──→  .honne/assets/*.jsonl (longitudinal)
       │                  │
-      │  lexi   ──→  persona.json (axis 1 only)
+      │  lexi   ──→  .honne/persona.json (axis 1 only)
       │
  SessionEnd hook ──→  .honne/cache/index.json  (passive transcript index, metadata only)
                               │
- compare (read-only)  ──→  query-assets.sh  ──→  docs/honne-compare.md  (diff of past claims)
+ compare (read-only)  ──→  honne query  ──→  docs/honne-compare.md  (diff of past claims)
 ```
 
 ## Prerequisites
@@ -123,32 +123,28 @@ Sample flow (simplified):
 user   > /honne:whoami
 
 step 1 > Scan scope?     ← arrow-key menu (repo / global)
-        Locale?          ← arrow-key menu (ko / en / jp)
-user   > [selects global, ko]
+         Locale?         ← arrow-key menu (ko / en / jp)
+user   > [selects global, en]
 
 step 2 > scan transcripts under ~/.claude/projects/… → .honne/cache/scan.json
-         (secrets + Claude Code meta-preamble filtered during scan)
+         run_id auto-generated; secrets + Claude Code meta filtered during scan
 
-step 3 > for each of 6 axes [lexicon, reaction, workflow, obsession, ritual, antipattern]:
-           - scripts/honne axis run <axis> --emit-hitl-block  → deterministic block
-           - echoed to user verbatim (quotes + candidate claim)
-           - arrow-key menu: y / n / edit
+step 3 > per-axis autonomous extraction [lexicon, reaction, workflow, obsession, ritual, antipattern]
+           - axis run → deterministic signal extraction from scan cache
+           - rejection filter applied (overlapping past rejections skipped)
+           - claims recorded to .honne/assets/claims.jsonl (no per-axis prompt)
 
-         축 1 — 어휘 (Lexicon)
-         반복되는 표현·코드스위칭·의성어로 이 후보를 수용할까요?
-         - [18d0e66e]   — …
-         candidate: …
-user   > [selects y]
+step 4 > LLM narrative synthesis
+           - synthesis_prompt.en.md applied to matched claims
+           - per-axis explanations + oneliner → .honne/cache/narrative.json
 
-         ... (axes 2–6 similarly) ...
-
-step 4 > persona + report + longitudinal assets
+step 5 > render persona + report
 ✓ Saved: .honne/persona.json
 ✓ Saved: docs/honne.md
 ✓ Appended: .honne/assets/claims.jsonl
 ```
 
-All per-axis text is rendered by `scripts/honne axis run` from fixed templates in `skills/whoami/templates/axes.{ko,en,jp}.md`. Models do not generate the prompts — this keeps Haiku-class models from hallucinating the HITL copy.
+Axis claims are extracted deterministically from scan data via fixed signal functions — models do not generate axis content. Narrative synthesis (step 4) is the only LLM step.
 
 After ≥ 2 runs, you can compare past profiles:
 
@@ -163,19 +159,19 @@ This reads only what's already on disk — no transcript re-scan, no LLM re-anal
 ### 1. First-time profile
 
 ```
-User: "나는 누구" or /honne:whoami
-→ honne asks: scan scope — repo or global?
-→ scans transcripts → extracts 6 axes → HITL per-axis (y / n / edit)
-→ writes .honne/persona.json + docs/honne.md
-→ approved claims recorded as assets in .honne/assets/claim.jsonl
+User: "who am I" or /honne:whoami
+→ honne asks: scan scope (repo / global) + locale (ko / en / jp)
+→ scans transcripts → extracts 6 axes autonomously → records claims
+→ LLM synthesizes per-axis explanations + overall oneliner
+→ renders .honne/persona.json + docs/honne.md
 ```
 
 ### 2. Single-axis
 
 ```
 User: "내 말버릇만" or /honne:lexi
-→ lexi scans transcripts → lexicon axis only → HITL
-→ records claim/rejection asset for lexicon
+→ lexi scans transcripts → lexicon axis only → records claim autonomously
+→ records claim asset for lexicon
 ```
 
 ### 3. Retrospective (after ≥ 2 runs)
@@ -215,8 +211,8 @@ Everything stays local under `.honne/` in your current project directory:
 | `.honne/cache/scan.json` | Transcript scan cache (ephemeral, TTL 24h) |
 | `.honne/cache/index.json` | SessionEnd hook output — metadata only, no message bodies |
 | `.honne/persona.json` | Current 6-axis profile snapshot |
-| `.honne/assets/claim.jsonl` | HITL-approved claims (longitudinal history) |
-| `.honne/assets/rejection.jsonl` | HITL-rejected claims (signal of what doesn't fit) |
+| `.honne/assets/claims.jsonl` | Autonomously recorded claims (longitudinal history) |
+| `.honne/assets/rejection.jsonl` | Rejected claims (signal of what doesn't fit) |
 | `.honne/assets/evolution.jsonl` | Cross-run diff results (identical / evolved / reversed) |
 
 **Privacy**:
