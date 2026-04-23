@@ -6,9 +6,9 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
-**honne** (本音, "true voice") — a local, evidence-backed mirror of how you actually work with LLMs. Beneath the official persona (*tatemae*) surfaces what your transcripts quietly record: recurring vocabulary, rejected suggestions, session rituals, the patterns you never named.
+**honne** (本音, "true voice") — a local, evidence-backed mirror of how you actually work with LLMs. Beneath the official persona (*tatemae*), honne surfaces what your transcripts quietly record: recurring vocabulary, rejected suggestions, session rituals, the patterns you never named.
 
-Everything runs locally. No network calls, no analytics. Claims are recorded autonomously and explained via LLM narrative synthesis. Your data lives under `.honne/` as plain JSONL — portable, inspectable, deletable.
+Everything runs locally. No network calls, no analytics. Claims are extracted and recorded autonomously; narrative explanations are synthesized via LLM in a single dedicated step. Your data lives under `.honne/` as plain JSONL — portable, inspectable, deletable.
 
 [한국어](./README.ko.md) · [日本語](./README.jp.md)
 
@@ -44,7 +44,7 @@ honne requires **python3 ≥ 3.9**. No other dependencies.
 python3 --version   # must be 3.9+
 ```
 
-Scripts exit with code 4 if python3 is missing or below 3.9. `jq` and `ripgrep` are no longer required.
+Scripts exit with code 4 if python3 is missing or below 3.9.
 
 ## Install
 
@@ -74,7 +74,7 @@ Expected output:
 ✓ Installed honne@0.0.1 — 3 skills registered (whoami, lexi, compare)
 ```
 
-Scope choice:
+Scope options:
 
 | Scope | Effect | When to use |
 |-------|--------|-------------|
@@ -110,7 +110,7 @@ Your `.honne/` directory is **not** touched by uninstall — your assets persist
 
 ## Quickstart
 
-Once installed, try the fastest path end-to-end:
+Once installed, start with:
 
 ```
 # Inside a Claude Code session, in any project
@@ -144,9 +144,9 @@ step 5 > render persona + report
 ✓ Appended: .honne/assets/claims.jsonl
 ```
 
-Axis claims are extracted deterministically from scan data via fixed signal functions — models do not generate axis content. Narrative synthesis (step 4) is the only LLM step.
+Axis claims come from deterministic signal functions, not from model generation. Narrative synthesis in step 4 is the only LLM call in the entire flow.
 
-After ≥ 2 runs, you can compare past profiles:
+After 2 or more runs, compare past profiles:
 
 ```
 /honne:compare
