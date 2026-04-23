@@ -87,7 +87,7 @@ Claude Code 세션 안에서 실행:
 /plugin list
 ```
 
-`honne` 이 리스트에 보여야 합니다. 아래 세 개의 본체 슬래시 명령이 자동완성되면 OK:
+`honne` 이 리스트에 보여야 합니다. 아래 세 슬래시 명령이 자동완성되면 준비 완료:
 
 ```
 /honne:whoami
@@ -104,7 +104,7 @@ Claude Code 세션 안에서 실행:
 /plugin marketplace remove honne
 ```
 
-`.honne/` 디렉터리는 삭제 명령에 **영향받지 않습니다** — 당신의 자산은 보존. 완전 제거를 원하면 `bash scripts/purge.sh --all` 로 수동 삭제.
+`.honne/` 디렉터리는 삭제 명령에 **영향받지 않습니다** — 당신의 자산은 그대로 보존됩니다. 완전 제거를 원하면 `bash scripts/purge.sh --all` 로 수동 삭제.
 
 ---
 
@@ -144,7 +144,7 @@ step 5 > 페르소나 + 보고서 렌더링
 ✓ append: .honne/assets/claims.jsonl
 ```
 
-2회차 이상 실행되면 과거 프로필과 비교 가능:
+2회차 이상 실행한 뒤에는 과거 프로필과 비교할 수 있습니다:
 
 ```
 /honne:compare
@@ -168,8 +168,7 @@ step 5 > 페르소나 + 보고서 렌더링
 
 ```
 사용자: "내 말버릇만" 또는 /honne:lexi
-→ lexi 가 transcripts 스캔 → lexicon 축만 → 자율 기록
-→ lexicon 축 claim 자산 기록
+→ lexi 가 트랜스크립트 스캔 → lexicon 축만 추출 → 자율 기록
 ```
 
 ### 3. 회고 (2회차 이상 실행 후)
