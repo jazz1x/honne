@@ -44,7 +44,7 @@ honne requires **python3 ≥ 3.9**. No other dependencies.
 python3 --version   # must be 3.9+
 ```
 
-Scripts exit with code 4 if python3 is missing or below 3.9. No other dependencies.
+Scripts exit with code 4 if python3 is missing or below 3.9.
 
 ## Install
 
@@ -110,7 +110,7 @@ Your `.honne/` directory is **not** touched by uninstall — your assets persist
 
 ## Quickstart
 
-Once installed, the fastest end-to-end path:
+Once installed, start with:
 
 ```
 # Inside a Claude Code session, in any project
