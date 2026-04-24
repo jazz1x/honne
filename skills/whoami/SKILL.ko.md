@@ -36,29 +36,38 @@ description: >
 
 ## 4단계: 축별 자율 기록
 
-`axis list`의 각 축에 대해:
+`axis list`의 각 축에 대해, 각 명령을 별도로 실행하세요 — 스크립트 파일로 번들링하거나 heredoc을 사용하지 마세요:
 
 ```bash
-AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
-  --locale "$LOCALE" --scan .honne/cache/scan.json)
+# 축 출력을 중간 파일로 저장
+AXIS_OUT=".honne/cache/axis-${axis}.json"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
+  --locale "$LOCALE" --scan .honne/cache/scan.json > "$AXIS_OUT"
+```
 
-# 근거 부족이면 건너뛰기
-if echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"; then
-  continue
-fi
+```bash
+# 근거 부족 확인
+python3 -c "import json,sys; d=json.load(open('$AXIS_OUT')); sys.exit(0 if d.get('insufficient_evidence') else 1)"
+```
+exit 0이면 → 이 축을 건너뛰기 (근거 부족), 다음으로 진행.
 
-# 후보 및 근거 추출
-CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
-QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
+```bash
+# 후보 추출
+CANDIDATE=$(python3 -c "import json; print(json.load(open('$AXIS_OUT'))['candidate_claim'])")
+```
 
-# 주장 기록
+```bash
+# 주장 기록 — 파일 기반 근거, 셸 인수 주입 없음
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --type claim --axis "$axis" --scope "$SCOPE" \
   --claim "$CANDIDATE" --run-id "$RUN_ID" \
-  --quotes-json "$QUOTES_JSON" \
+  --quotes-file "$AXIS_OUT" \
   --out ".honne/assets/claims.jsonl"
-done
 ```
+
+**강제 규칙**: `/tmp`에 중간 데이터를 쓰지 마세요. `/tmp`에 쓰고 싶은 충동이 느껴지면 대신 `.honne/cache/`를 사용하세요. `/tmp`에 쓰는 것은 SKILL.md 계약 위반입니다 — 테스트 스위트가 이를 감지합니다.
+
+**중요**: 각 `bash` 블록을 직접 셸 명령으로 실행하세요. `/tmp`에 쓰지 마세요, 셸 heredoc(`<< 'EOF'`)을 사용하지 마세요, 명령을 스크립트 파일로 번들링하지 마세요. 인라인 명령만 실행하세요.
 
 ## 5단계: LLM 해설 합성
 
@@ -83,7 +92,11 @@ print(json.dumps(payload, ensure_ascii=False))
 
 (c) 합성: 합성 프롬프트 시스템 지침을 자신에게 적용 + USER_PAYLOAD를 사용자 입력으로. STRICT JSON 응답 생성.
 
-(d) 결과 저장: JSON 응답을 `.honne/cache/narrative.json`에 `Write` 도구로 저장. JSON 파싱 실패 또는 빈 응답이면 저장 스킵 (narrative.json 미생성).
+(d) 절대 경로를 먼저 확인하세요:
+```bash
+NARRATIVE_PATH=$(python3 -c "import os; print(os.path.join(os.getcwd(), '.honne/cache/narrative.json'))")
+```
+그런 다음: JSON 응답을 확인된 경로 (`NARRATIVE_PATH`)에 `Write` 도구로 저장하세요. JSON 파싱 실패 또는 빈 응답이면 저장 스킵.
 
 ## 6단계: 페르소나 및 보고서 렌더링
 

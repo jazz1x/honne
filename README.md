@@ -19,6 +19,7 @@ Everything runs locally. No network calls, no analytics. Claims are extracted an
 | **whoami** | `/honne:whoami` | Main orchestrator. 7-axis persona with autonomous evidence gathering and LLM narrative synthesis. |
 | **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
+| **persona** | `/honne:persona` | Persona system prompt generator. Synthesizes conflict between antipattern & signature axes for session activation. |
 
 Each skill operates in its own orbit, connected only through **shared artifacts on disk** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`).
 

@@ -15,6 +15,7 @@ def record_claim(
     prior_id: str = None,
     quotes_json: str = None,
     run_id: Optional[str] = None,
+    quotes_file: Optional[str] = None,
 ) -> int:
     """Record a claim to JSONL."""
     out_path = Path(out_path)
@@ -22,6 +23,15 @@ def record_claim(
     # Generate SHA256 ID
     claim_text = f"{type_}:{axis}:{claim}"
     claim_id = hashlib.sha256(claim_text.encode()).hexdigest()[:16]
+
+    if quotes_file:
+        with open(quotes_file, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        quotes = raw.get("quotes", []) if isinstance(raw, dict) else raw
+    elif quotes_json:
+        quotes = json.loads(quotes_json)
+    else:
+        quotes = []
 
     record = {
         "id": claim_id,
@@ -32,7 +42,7 @@ def record_claim(
         "claim": claim,
         "support_count": support_count,
         "prior_id": prior_id,
-        "quotes": json.loads(quotes_json) if quotes_json else [],
+        "quotes": quotes,
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
 
@@ -54,6 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("--support-count", type=int, default=1)
     parser.add_argument("--prior-id")
     parser.add_argument("--quotes-json")
+    parser.add_argument("--quotes-file")
     parser.add_argument("--run-id")
     args = parser.parse_args()
     exit(record_claim(
@@ -66,4 +77,5 @@ if __name__ == "__main__":
         args.prior_id,
         args.quotes_json,
         args.run_id,
+        args.quotes_file,
     ))

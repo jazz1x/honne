@@ -36,29 +36,38 @@ description: >
 
 ## ステップ4: 軸ごとの自律的な記録
 
-`axis list` の各軸について:
+`axis list` の各軸について、各コマンドを個別に実行します — スクリプトファイルにバンドルしたり、heredocを使用したりしないでください:
 
 ```bash
-AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
-  --locale "$LOCALE" --scan .honne/cache/scan.json)
+# 軸出力を中間ファイルに書き込む
+AXIS_OUT=".honne/cache/axis-${axis}.json"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
+  --locale "$LOCALE" --scan .honne/cache/scan.json > "$AXIS_OUT"
+```
 
-# 根拠が不十分な場合はスキップ
-if echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"; then
-  continue
-fi
+```bash
+# 根拠不足を確認
+python3 -c "import json,sys; d=json.load(open('$AXIS_OUT')); sys.exit(0 if d.get('insufficient_evidence') else 1)"
+```
+終了 0 の場合 → この軸をスキップ (根拠不足)、次へ進む。
 
-# 候補と根拠を抽出
-CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
-QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
+```bash
+# 候補を抽出
+CANDIDATE=$(python3 -c "import json; print(json.load(open('$AXIS_OUT'))['candidate_claim'])")
+```
 
-# 主張を記録
+```bash
+# 主張を記録 — ファイルベースの根拠、シェル引数インジェクションなし
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --type claim --axis "$axis" --scope "$SCOPE" \
   --claim "$CANDIDATE" --run-id "$RUN_ID" \
-  --quotes-json "$QUOTES_JSON" \
+  --quotes-file "$AXIS_OUT" \
   --out ".honne/assets/claims.jsonl"
-done
 ```
+
+**強制ルール**: `/tmp` に中間データを書き込まないでください。`/tmp` に書き込みたい衝動に駆られた場合は、代わりに `.honne/cache/` を使用してください。`/tmp` への書き込みは SKILL.md 契約違反です — テストスイートがこれをキャッチします。
+
+**重要**: 各 `bash` ブロックを直接シェルコマンドとして実行します。`/tmp` に書き込まないでください、シェル heredoc (`<< 'EOF'`) を使用しないでください、コマンドをスクリプトファイルにバンドルしないでください。インラインコマンドのみを実行してください。
 
 ## ステップ5: LLMナラティブ合成
 
@@ -83,7 +92,11 @@ print(json.dumps(payload, ensure_ascii=False))
 
 (c) 合成: 合成プロンプトシステム指示を自身に適用 + USER_PAYLOADをユーザー入力として。STRICT JSON応答を生成。
 
-(d) 結果を保存: JSON応答を `.honne/cache/narrative.json` に `Write` ツールで保存。JSON解析失敗または空の応答の場合、保存をスキップ (narrative.jsonが生成されない)。
+(d) 絶対パスを最初に解決します:
+```bash
+NARRATIVE_PATH=$(python3 -c "import os; print(os.path.join(os.getcwd(), '.honne/cache/narrative.json'))")
+```
+その後: JSON応答を解決されたパス (`NARRATIVE_PATH`) に `Write` ツールで保存します。JSON解析失敗または空の応答の場合、保存をスキップ。
 
 ## ステップ6: ペルソナとレポートをレンダリング
 

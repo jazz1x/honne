@@ -19,6 +19,7 @@
 | **whoami** | `/honne:whoami` | 메인 오케스트레이터. 7축 페르소나 + 자율 증거 수집 + LLM 내러티브 합성. |
 | **lexi** | `/honne:lexi` | 어휘(Lexicon) 축 단독 (고빈도 어휘, 코드스위칭 비율, 의성·의태어). |
 | **compare** | `/honne:compare` | 읽기 전용 회고. 누적 자산을 읽어 시간축 변화를 제시. transcript 재스캔 / LLM 재분석 없음. |
+| **persona** | `/honne:persona` | 페르소나 프롬프트 생성기. 안티패턴 × 시그니처 축 충돌 합성으로 세션 활성화 프롬프트 생성. |
 
 각 스킬은 독립적으로 동작하며, **파일 기반 공유 산출물** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`) 로만 연결됩니다.
 

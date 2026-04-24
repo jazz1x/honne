@@ -90,6 +90,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     claim_parser.add_argument("--support-count", type=int, required=False)
     claim_parser.add_argument("--prior-id", required=False)
     claim_parser.add_argument("--quotes-json", required=False)
+    claim_parser.add_argument("--quotes-file", required=False)
     claim_parser.add_argument("--run-id", required=False)
 
     # purge
@@ -127,6 +128,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     report_p.add_argument("--persona", required=True)
     report_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
     report_p.add_argument("--out", required=True)
+
+    persona_prompt_p = render_sub.add_parser("persona-prompt")
+    persona_prompt_p.add_argument("--synthesis", required=False)
+    persona_prompt_p.add_argument("--persona", required=True)
+    persona_prompt_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
+    persona_prompt_p.add_argument("--out", required=False)
+    persona_prompt_p.add_argument("--check-only", action="store_true", default=False)
 
     # doctor
     subparsers.add_parser("doctor", help="environment health check")
@@ -211,6 +219,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             prior_id=args.prior_id,
             quotes_json=args.quotes_json,
             run_id=args.run_id,
+            quotes_file=args.quotes_file,
         )
 
     elif args.command == "purge":
@@ -256,6 +265,25 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif args.command == "render" and args.subcommand == "report":
         from .render import render_report
         return render_report(
+            persona_path=args.persona,
+            locale=args.locale,
+            out_path=args.out,
+        )
+
+    elif args.command == "render" and args.subcommand == "persona-prompt":
+        from .persona_prompt import render_persona_prompt
+        if args.check_only:
+            # Just verify persona.json exists
+            from pathlib import Path
+            p = Path(args.persona)
+            if not p.exists():
+                return 66
+            return 0
+        if not args.synthesis or not args.out:
+            print("error: --synthesis and --out required (unless --check-only)", file=sys.stderr)
+            return 2
+        return render_persona_prompt(
+            synthesis_path=args.synthesis,
             persona_path=args.persona,
             locale=args.locale,
             out_path=args.out,

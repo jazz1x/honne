@@ -19,6 +19,7 @@
 | **whoami** | `/honne:whoami` | メインオーケストレーター。7 軸ペルソナ + 自律証拠収集 + LLM ナラティブ合成。 |
 | **lexi** | `/honne:lexi` | 語彙 (Lexicon) 軸のみ (高頻度語彙、コードスイッチング比率、擬音語・擬態語)。 |
 | **compare** | `/honne:compare` | 読み取り専用の振り返り。蓄積された資産を読み、経時的な変化を提示。transcript 再スキャン / LLM 再分析なし。 |
+| **persona** | `/honne:persona` | ペルソナプロンプト生成器。アンチパターン × シグネチャ軸の衝突合成によりセッション有効化プロンプト生成。 |
 
 各スキルは独立した軌道で動作し、**ファイルベースの共有成果物** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`) でのみ接続されます。
 
