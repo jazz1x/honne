@@ -5,7 +5,7 @@ import re
 import sys
 from . import extract, io as honne_io, summarize
 
-AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern")
+AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern", "signature")
 LOCALES = ("ko", "en", "jp")
 
 _EXTRACTORS = {
@@ -15,6 +15,7 @@ _EXTRACTORS = {
     "obsession":   extract.extract_obsession,
     "ritual":      extract.extract_ritual,
     "antipattern": extract.extract_antipattern,
+    "signature":   extract.extract_signature,
 }
 
 
@@ -135,7 +136,7 @@ def collect_quotes(scan_path: Path, axis: str, signal: dict, k: int = 3) -> list
     sessions = scan.get("sessions", [])
 
     # Axes that embed first_text directly in top_examples
-    _DIRECT_AXES = frozenset({"workflow", "antipattern", "ritual"})
+    _DIRECT_AXES = frozenset({"workflow", "antipattern", "ritual", "signature"})
 
     if axis in _DIRECT_AXES:
         results = []
@@ -304,6 +305,7 @@ def run(name: str, locale: str, scan_path: Path,
         "obsession": summarize.summarize_obsession,
         "ritual": summarize.summarize_ritual,
         "antipattern": summarize.summarize_antipattern,
+        "signature":   summarize.summarize_signature,
     }
     candidate = _SUM[name](signal, locale)
     if not candidate:

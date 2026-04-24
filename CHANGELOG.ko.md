@@ -5,7 +5,7 @@
 초기 릴리스입니다.
 
 - 핵심 스킬: `honne` (메인 오케스트레이터, 6축 페르소나), `lexi` (어휘 축), `compare` (자산 비교, 읽기 전용 회고).
-- 별칭: `whoami` → `honne`, `diff` → `compare`.
+- 별칭: `honne` → `whoami`, `diff` → `compare`.
 - 수동 트랜스크립트 인덱싱을 위한 `SessionEnd` 훅.
 - `.honne/assets/*.jsonl`의 자산 레이어 (주장/거절/변화) - 명시적 쿼리 전용 액세스.
 - 모든 사용자 대면 문서의 트리플셋 i18n (en/ko/jp).

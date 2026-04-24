@@ -53,3 +53,12 @@
 - summary_template.label: Antipatterns
 - summary_template.item_sep: ", "
 - summary_template.empty: insufficient evidence
+
+## signature
+- label: Signature
+- hitl_question: Accept this recurring positive pattern?
+- report_header: Axis 7 — Signature
+- connective: " · "
+- summary_template.label: Signature patterns
+- summary_template.item_sep: ", "
+- summary_template.empty: insufficient evidence

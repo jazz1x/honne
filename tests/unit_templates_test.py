@@ -10,12 +10,13 @@ from honne_py.axis import _load_template, validate, AXES, LOCALES
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "skills" / "whoami" / "templates"
 AXES_LABELS = {
-    "lexicon":     {"ko": "어휘",     "en": "Lexicon",     "jp": "語彙"},
-    "reaction":    {"ko": "반응",     "en": "Reaction",    "jp": "反応"},
-    "workflow":    {"ko": "워크플로", "en": "Workflow",    "jp": "ワークフロー"},
-    "obsession":   {"ko": "집착",     "en": "Obsession",   "jp": "執着"},
-    "ritual":      {"ko": "의식",     "en": "Ritual",      "jp": "儀式"},
-    "antipattern": {"ko": "비효율 패턴",   "en": "Antipattern", "jp": "アンチパターン"},
+    "lexicon":     {"ko": "어휘",           "en": "Lexicon",           "jp": "語彙"},
+    "reaction":    {"ko": "반응",           "en": "Reaction",          "jp": "反応"},
+    "workflow":    {"ko": "워크플로",       "en": "Workflow",          "jp": "ワークフロー"},
+    "obsession":   {"ko": "집착",           "en": "Obsession",         "jp": "執着"},
+    "ritual":      {"ko": "의식",           "en": "Ritual",            "jp": "儀式"},
+    "antipattern": {"ko": "비효율 패턴",    "en": "Antipattern",       "jp": "アンチパターン"},
+    "signature":   {"ko": "시그니처 패턴",  "en": "Signature",         "jp": "シグニチャパターン"},
 }
 FORBIDDEN_LABELS = {"녹동", "뛈글", "맨듭니다"}
 
@@ -133,8 +134,8 @@ def test_all_three_locale_files_exist():
         assert p.exists(), f"axes.{locale}.md missing"
 
 
-def test_each_locale_file_has_six_sections():
+def test_each_locale_file_has_seven_sections():
     for locale in LOCALES:
         p = TEMPLATES_DIR / f"axes.{locale}.md"
         count = sum(1 for line in p.read_text().splitlines() if line.startswith("## "))
-        assert count == 6, f"axes.{locale}.md: expected 6 sections, got {count}"
+        assert count == 7, f"axes.{locale}.md: expected 7 sections, got {count}"

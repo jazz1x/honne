@@ -412,6 +412,83 @@ def extract_antipattern(input_path: Union[Path, str], out_path: Union[Path, str]
     return 0
 
 
+def extract_signature(input_path: Union[Path, str], out_path: Union[Path, str]) -> int:
+    """Detect characteristic positive patterns — decisive closure and targeted requests."""
+    input_path, out_path = Path(input_path), Path(out_path)
+
+    try:
+        with open(input_path) as f:
+            scan_data = json.load(f)
+    except Exception:
+        return 1
+
+    sessions = scan_data.get("sessions", [])
+    if not sessions:
+        return 2
+
+    counters: dict = {"decisive_close": 0, "targeted_request": 0}
+    matched_sessions: set = set()
+    first_examples: dict = {}
+
+    # ≤5-word affirmative/closure messages (instruction verbs like push/merge excluded)
+    decisive_pattern = re.compile(
+        r'\b(ok|okay|ㅇㅇ|네|좋아|됐어|됩니다|완료|done|go ahead|proceed|fix all|그래|맞아|진행해|처리해|알겠어|확인)\b',
+        re.IGNORECASE,
+    )
+    # references a specific file path (with extension) or line:col pattern
+    targeted_pattern = re.compile(
+        r'\b\w[\w/.-]*\.(py|ts|js|go|sh|md|json|yaml|yml|toml)(:\d+)?\b'
+    )
+
+    for session in sessions:
+        messages = session.get("messages", [])
+        session_id = session.get("session_id")
+        ts = session.get("started_at", "")
+
+        for msg in messages:
+            if msg.get("role") != "user":
+                continue
+            text = msg.get("text", "").strip()
+            if not text:
+                continue
+
+            word_count = len(text.split())
+            if word_count <= 5 and decisive_pattern.search(text):
+                counters["decisive_close"] += 1
+                matched_sessions.add(session_id)
+                if "decisive_close" not in first_examples:
+                    first_examples["decisive_close"] = {
+                        "first_text": text, "first_session_id": session_id, "first_ts": ts,
+                    }
+
+            if targeted_pattern.search(text):
+                counters["targeted_request"] += 1
+                matched_sessions.add(session_id)
+                if "targeted_request" not in first_examples:
+                    first_examples["targeted_request"] = {
+                        "first_text": text, "first_session_id": session_id, "first_ts": ts,
+                    }
+
+    top_examples = [
+        {"key": k, **v}
+        for k, v in sorted(first_examples.items(), key=lambda x: -counters.get(x[0], 0))
+    ]
+
+    result = {
+        "axis": "signature",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "counters": counters,
+        "top_examples": top_examples,
+        "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(matched_sessions)},
+    }
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w") as f:
+        json.dump(result, f)
+
+    return 0
+
+
 REACTION_PATTERNS: dict = {
     "correction": re.compile(r'(아님|아니|틀렸|잘못|wrong|incorrect|not (right|correct))', re.IGNORECASE),
     "scope_cut":  re.compile(r'(만|그만|stop|only|just|대신|하지마|skip)', re.IGNORECASE),

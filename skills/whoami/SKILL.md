@@ -36,29 +36,32 @@ Before Step 4 records each axis, pipe the candidate through `bash "${CLAUDE_PLUG
 
 ## Step 4: Per-axis autonomous record
 
-For each axis from `axis list`:
+For each axis from `axis list`, run each command separately — do NOT bundle into a script file or use heredocs:
 
 ```bash
 AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
   --locale "$LOCALE" --scan .honne/cache/scan.json)
+```
 
-# Skip if insufficient evidence
-if echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"; then
-  continue
-fi
+```bash
+echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"
+```
+If exit 0 → skip this axis (insufficient evidence), continue to next.
 
-# Extract candidate and quotes
+```bash
 CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
 QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
+```
 
-# Record claim
+```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --type claim --axis "$axis" --scope "$SCOPE" \
   --claim "$CANDIDATE" --run-id "$RUN_ID" \
   --quotes-json "$QUOTES_JSON" \
   --out ".honne/assets/claims.jsonl"
-done
 ```
+
+**IMPORTANT**: Execute each `bash` block as a direct shell command. Do NOT write to `/tmp`, do NOT use shell heredocs (`<< 'EOF'`), do NOT bundle commands into a script file. Run inline commands only.
 
 ## Step 5: LLM narrative synthesis
 
@@ -66,24 +69,23 @@ Invoke Claude (your own mental reasoning) to synthesize explanations and a one-l
 
 (a) Read synthesis prompt: `Read "${CLAUDE_PLUGIN_ROOT}/skills/whoami/templates/synthesis_prompt.${LOCALE}.md"`
 
-(b) Extract matched claims:
-```bash
-USER_PAYLOAD=$(python3 -c "
-import json
-claims = [json.loads(l) for l in open('.honne/assets/claims.jsonl') if l.strip()]
-matched = [c for c in claims if c.get('run_id')=='${RUN_ID}' and c.get('scope')=='${SCOPE}']
-AXES = ['lexicon','reaction','workflow','obsession','ritual','antipattern']
-payload = {'locale':'${LOCALE}','claims':{}}
-for ax in AXES:
-    found = [c for c in matched if c.get('axis')==ax]
-    payload['claims'][ax] = {'claim': found[0]['claim'], 'evidence_count': len(found[0].get('quotes', []))} if found else None
-print(json.dumps(payload, ensure_ascii=False))
-")
+(b) Build USER_PAYLOAD from the claims recorded in Step 4. You already have the AXIS_JSON outputs in memory — construct the payload directly as a JSON object without re-reading files:
+
 ```
+USER_PAYLOAD = {
+  "locale": "<LOCALE>",
+  "claims": {
+    "<axis>": {"claim": "<CANDIDATE>", "evidence_count": <len(quotes)>} for each recorded axis,
+    "<skipped_axis>": null for each axis that had insufficient evidence
+  }
+}
+```
+
+Do NOT use `python3 << 'PYEOF'` or any heredoc to build this payload. Assemble it in your mental context from the Step 4 outputs already known.
 
 (c) Synthesize: Apply synthesis_prompt system instructions to yourself + USER_PAYLOAD as user input. Produce STRICT JSON response.
 
-(d) Save result: `Write` the JSON response to `.honne/cache/narrative.json`. If JSON parse fails or response is empty, skip saving (narrative.json remains absent).
+(d) Save result: `Write` the JSON response to `{PWD}/.honne/cache/narrative.json` (absolute path required). If JSON parse fails or response is empty, skip saving (narrative.json remains absent).
 
 ## Step 6: Render persona and report
 
@@ -104,6 +106,8 @@ Report saved files to `.honne/persona.json` and `docs/honne.md`. Use `/honne:com
 
 Output the following next action suggestions to the user:
 
-**다음 액션 제안** *(해당 스킬들이 추가될 예정입니다.)*
+**다음 액션 제안**
 - 이 형태로 나의 분신(페르소나) 구현해보기
-- 토큰 절약을 위한 나의 습관 탐색해보기
+- 효율적인 토큰 사용을 위한 분석 가이드
+
+*(these features are coming soon.)*

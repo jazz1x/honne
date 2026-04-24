@@ -33,13 +33,3 @@
 
 {oneliner}
 
-## next_actions
-
----
-
-## Suggested Next Actions
-
-- Build a personal AI persona based on these patterns
-- Explore your habits for token efficiency
-
-*(these skills are coming soon.)*

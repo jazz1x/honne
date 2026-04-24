@@ -53,3 +53,12 @@
 - summary_template.label: 反パターン
 - summary_template.item_sep: ", "
 - summary_template.empty: 根拠不足
+
+## signature
+- label: シグニチャパターン
+- hitl_question: 繰り返される肯定的なパターンを受け入れますか？
+- report_header: 軸7 — シグニチャパターン (Signature)
+- connective: " · "
+- summary_template.label: シグニチャパターン
+- summary_template.item_sep: ", "
+- summary_template.empty: 根拠不足

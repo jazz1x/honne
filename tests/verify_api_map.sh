@@ -14,6 +14,7 @@ expected = {
     "extract.extract_obsession":  {"input_path", "out_path"},
     "extract.extract_ritual":     {"input_path", "out_path"},
     "extract.extract_antipattern":{"input_path", "out_path"},
+    "extract.extract_signature":  {"input_path", "out_path"},
     "detect_recurrence.detect":   {"input_path", "out_path", "min_sessions"},
     "evidence.gather":            {"input_path", "claim", "out_path", "max_"},
 }
