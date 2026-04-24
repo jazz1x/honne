@@ -169,6 +169,25 @@ def summarize_ritual(signal: dict, locale: str) -> str:
     return f"{label}: {' / '.join(parts)}"
 
 
+def summarize_signature(signal: dict, locale: str) -> str:
+    """Non-zero positive counters sorted by frequency desc, key asc on tie.
+    Max 5 items. Format: '{label}: key1(freq1), key2(freq2), ...'
+    """
+    tpl = _load_summary_template(locale, "signature")
+    label = tpl["summary_template.label"]
+    sep = tpl["summary_template.item_sep"]
+
+    counters = signal.get("counters", {})
+    items = [(key, count) for key, count in counters.items() if count > 0]
+    if not items:
+        return ""
+
+    items.sort(key=lambda x: (-x[1], x[0]))
+    items = items[:5]
+    result = sep.join(f"{key}({count})" for key, count in items)
+    return f"{label}: {result}"
+
+
 def summarize_antipattern(signal: dict, locale: str) -> str:
     """Counters sorted by frequency desc, key asc on tie.
     Max 5 items. Format: '{label}: key1(freq1), key2(freq2), ...'

@@ -134,8 +134,8 @@ class TestNarrativeRender:
         content = report_file.read_text(encoding="utf-8")
         assert "## 종합 분석" not in content
 
-    def test_next_actions_always_rendered(self, tmp_path):
-        """next_actions section renders regardless of oneliner presence."""
+    def test_next_actions_not_in_report(self, tmp_path):
+        """next_actions section is not rendered (removed from template)."""
         for has_oneliner in [True, False]:
             persona_file = tmp_path / f"persona_{has_oneliner}.json"
             report_file = tmp_path / f"report_{has_oneliner}.md"
@@ -149,8 +149,7 @@ class TestNarrativeRender:
             result = render_report(persona_path=persona_file, locale="ko", out_path=report_file)
             assert result == 0
             content = report_file.read_text(encoding="utf-8")
-            assert "다음 액션 제안" in content, f"next_actions missing when oneliner={has_oneliner}"
-            assert "추가될 예정" in content
+            assert "다음 액션 제안" not in content, f"next_actions should not be in report when oneliner={has_oneliner}"
 
 
 class TestTemplateStructure:

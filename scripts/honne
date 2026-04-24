@@ -22,4 +22,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
+command -v python3 >/dev/null 2>&1 || { emit_banner 71; exit 71; }
+python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)" 2>/dev/null \
+  || { emit_banner 71; exit 71; }
 PYTHONPATH="$PY_DIR:${PYTHONPATH:-}" exec python3 -m honne_py "$@"

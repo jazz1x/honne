@@ -16,7 +16,7 @@ Everything runs locally. No network calls, no analytics. Claims are extracted an
 
 | Skill | Command | Role |
 |-------|---------|------|
-| **whoami** | `/honne:whoami` | Main orchestrator. 6-axis persona with autonomous evidence gathering and LLM narrative synthesis. |
+| **whoami** | `/honne:whoami` | Main orchestrator. 7-axis persona with autonomous evidence gathering and LLM narrative synthesis. |
 | **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 
@@ -25,7 +25,7 @@ Each skill operates in its own orbit, connected only through **shared artifacts 
 ```
  transcripts (~/.claude/projects/**/*.jsonl)
       │
-      │  honne  ──→  .honne/persona.json + docs/honne.md  (6-axis snapshot)
+      │  honne  ──→  .honne/persona.json + docs/honne.md  (7-axis snapshot)
       │                  │
       │                  ├── honne record claim  ──→  .honne/assets/*.jsonl (longitudinal)
       │                  │
@@ -44,7 +44,7 @@ honne requires **python3 ≥ 3.9**. No other dependencies.
 python3 --version   # must be 3.9+
 ```
 
-Scripts exit with code 4 if python3 is missing or below 3.9.
+Scripts exit with code 71 if python3 is missing or below 3.9.
 
 ## Install
 
@@ -129,7 +129,7 @@ user   > [selects global, en]
 step 2 > scan transcripts under ~/.claude/projects/… → .honne/cache/scan.json
          run_id auto-generated; secrets + Claude Code meta filtered during scan
 
-step 3 > per-axis autonomous extraction [lexicon, reaction, workflow, obsession, ritual, antipattern]
+step 3 > per-axis autonomous extraction [lexicon, reaction, workflow, obsession, ritual, antipattern, signature]
            - axis run → deterministic signal extraction from scan cache
            - rejection filter applied (overlapping past rejections skipped)
            - claims recorded to .honne/assets/claims.jsonl (no per-axis prompt)
@@ -161,7 +161,7 @@ This reads only what's already on disk — no transcript re-scan, no LLM re-anal
 ```
 User: "who am I" or /honne:whoami
 → honne asks: scan scope (repo / global) + locale (ko / en / jp)
-→ scans transcripts → extracts 6 axes autonomously → records claims
+→ scans transcripts → extracts 7 axes autonomously → records claims
 → LLM synthesizes per-axis explanations + overall oneliner
 → renders .honne/persona.json + docs/honne.md
 ```
@@ -210,7 +210,7 @@ Everything stays local under `.honne/` in your current project directory:
 |------|---------|
 | `.honne/cache/scan.json` | Transcript scan cache (ephemeral, TTL 24h) |
 | `.honne/cache/index.json` | SessionEnd hook output — metadata only, no message bodies |
-| `.honne/persona.json` | Current 6-axis profile snapshot |
+| `.honne/persona.json` | Current 7-axis profile snapshot |
 | `.honne/assets/claims.jsonl` | Autonomously recorded claims (longitudinal history) |
 | `.honne/assets/rejection.jsonl` | Rejected claims (signal of what doesn't fit) |
 | `.honne/assets/evolution.jsonl` | Cross-run diff results (identical / evolved / reversed) |
@@ -257,7 +257,7 @@ harnish (make)  ──→  honne (know)  ──→  galmuri (keep)
 ```
 
 - [harnish](https://github.com/jazz1x/harnish) — autonomous implementation engine
-- [honne](https://github.com/jazz1x/honne) — evidence-backed self-observation (6-axis persona)
+- [honne](https://github.com/jazz1x/honne) — evidence-backed self-observation (7-axis persona)
 - [galmuri](https://github.com/jazz1x/galmuri) — gather, organize, and keep context (formerly *hanashi*)
 
 ## Development

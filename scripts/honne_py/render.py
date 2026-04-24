@@ -43,7 +43,7 @@ def render_persona(
       1: claims_path missing/parse error
       2: argument error (scope/locale values, now format)
     """
-    AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern")
+    AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern", "signature")
 
     try:
         claims_path = Path(claims_path)
@@ -164,7 +164,7 @@ def render_report(
       1: persona_path missing/parse, template missing
       2: argument error
     """
-    AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern")
+    AXES = ("lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern", "signature")
 
     try:
         persona_path = Path(persona_path)

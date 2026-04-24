@@ -53,3 +53,12 @@
 - summary_template.label: 비효율 패턴
 - summary_template.item_sep: ", "
 - summary_template.empty: 근거 부족
+
+## signature
+- label: 시그니처 패턴
+- hitl_question: 반복적으로 잘 작동하는 이 긍정 패턴을 수용할까요?
+- report_header: 축 7 — 시그니처 패턴 (Signature)
+- connective: " · "
+- summary_template.label: 시그니처 패턴
+- summary_template.item_sep: ", "
+- summary_template.empty: 근거 부족

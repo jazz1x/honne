@@ -21,11 +21,11 @@ pytestmark = pytest.mark.skipif(
 # ── AXES constant ──────────────────────────────────────────────────────────────
 
 def test_axes_count():
-    assert len(AXES) == 6
+    assert len(AXES) == 7
 
 
 def test_axes_values():
-    expected = {"lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern"}
+    expected = {"lexicon", "reaction", "workflow", "obsession", "ritual", "antipattern", "signature"}
     assert set(AXES) == expected
 
 

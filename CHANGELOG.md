@@ -27,7 +27,7 @@ Initial release of **honne** — evidence-backed self-observation from local LLM
 #### Templates (3 locales: ko / en / jp)
 
 - `axes.{locale}.md` — axis labels, HITL questions, report headers, summary_template keys
-- `report.{locale}.md` — report sections: header, axis_block, quote_line, insufficient_block, footer, next_actions
+- `report.{locale}.md` — report sections: header, axis_block, quote_line, insufficient_block, footer
 - `synthesis_prompt.{locale}.md` — system + user prompt for LLM narrative synthesis
 - `errors.txt` — TSV error catalogue (exit codes 2, 66, 71, 73 × 3 locales)
 - `forbidden.json` — hallucination guard phrases per locale
@@ -45,7 +45,7 @@ Initial release of **honne** — evidence-backed self-observation from local LLM
 
 #### Infrastructure
 
-- Hybrid test suite: 188 unit tests (pytest) + bats integration; sandboxed HOME guard prevents touching real `~/.claude/`
+- Hybrid test suite: 206 unit tests (pytest) + bats integration; sandboxed HOME guard prevents touching real `~/.claude/`
 - Pre-commit hook: shellcheck, JSON syntax, SKILL.md frontmatter validation, executable bits
 - SessionEnd hook: passive transcript index (metadata only, no LLM, no context injection)
 - Asset layer at `.honne/assets/*.jsonl` (claims / rejections / evolutions) — explicit-query-only access
