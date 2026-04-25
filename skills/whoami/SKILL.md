@@ -1,6 +1,6 @@
 ---
 name: whoami
-version: 0.0.1
+version: 0.0.2
 description: >
   Orchestrate 6-axis self-observation from local LLM transcripts.
   Autonomous evidence gathering + LLM-synthesized narrative.
@@ -39,29 +39,25 @@ Before Step 4 records each axis, pipe the candidate through `bash "${CLAUDE_PLUG
 For each axis from `axis list`, run each command separately — do NOT bundle into a script file or use heredocs:
 
 ```bash
-# Write axis output to intermediate file
-AXIS_OUT=".honne/cache/axis-${axis}.json"
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
-  --locale "$LOCALE" --scan .honne/cache/scan.json > "$AXIS_OUT"
+  --locale "$LOCALE" --scan .honne/cache/scan.json > ".honne/cache/axis-${axis}.json"
 ```
 
 ```bash
-# Check insufficiency
-python3 -c "import json,sys; d=json.load(open('$AXIS_OUT')); sys.exit(0 if d.get('insufficient_evidence') else 1)"
+python3 -c "import json,sys; d=json.load(open('.honne/cache/axis-${axis}.json')); sys.exit(0 if d.get('insufficient_evidence') else 1)"
 ```
 If exit 0 → skip this axis (insufficient evidence), continue to next.
 
 ```bash
-# Extract candidate
-CANDIDATE=$(python3 -c "import json; print(json.load(open('$AXIS_OUT'))['candidate_claim'])")
+python3 -c "import json; print(json.load(open('.honne/cache/axis-${axis}.json'))['candidate_claim'])"
 ```
+Capture stdout as `CANDIDATE`.
 
 ```bash
-# Record — file-based quotes, no shell arg injection
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --type claim --axis "$axis" --scope "$SCOPE" \
   --claim "$CANDIDATE" --run-id "$RUN_ID" \
-  --quotes-file "$AXIS_OUT" \
+  --quotes-file ".honne/cache/axis-${axis}.json" \
   --out ".honne/assets/claims.jsonl"
 ```
 
@@ -93,20 +89,26 @@ Do NOT use `python3 << 'PYEOF'` or any heredoc to build this payload. Assemble i
 
 (d) Resolve the absolute path first:
 ```bash
-NARRATIVE_PATH=$(python3 -c "import os; print(os.path.join(os.getcwd(), '.honne/cache/narrative.json'))")
+python3 -c "import os; print(os.path.join(os.getcwd(), '.honne/cache/narrative.json'))"
 ```
-Then: `Write` the JSON response to the resolved path (`NARRATIVE_PATH`). If JSON parse fails or response is empty, skip saving.
+Capture stdout as `NARRATIVE_PATH`. Then: `Write` the JSON response to the resolved path. If JSON parse fails or response is empty, skip saving.
 
 ## Step 6: Render persona and report
 
 ```bash
-NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+date -u +%Y-%m-%dT%H:%M:%SZ
+```
+Capture stdout as `NOW`.
+
+```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona \
   --claims .honne/assets/claims.jsonl \
   --scope "$SCOPE" --locale "$LOCALE" --run-id "$RUN_ID" --now "$NOW" \
   --narrative .honne/cache/narrative.json \
   --out .honne/persona.json
+```
 
+```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render report \
   --persona .honne/persona.json --locale "$LOCALE" --out docs/honne.md
 ```

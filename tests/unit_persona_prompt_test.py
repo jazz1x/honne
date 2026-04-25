@@ -1,4 +1,4 @@
-"""Unit tests for persona_prompt — build_conflict_payload + render_personas."""
+"""Unit tests for persona_prompt — build_conflict_payload + render_personas + persona check CLI."""
 import json
 import sys
 from pathlib import Path
@@ -7,6 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from honne_py.persona_prompt import build_conflict_payload, render_personas
+from honne_py.cli import main as cli_main
 
 
 class TestBuildConflictPayload:
@@ -246,3 +247,17 @@ class TestRenderPersonas:
 
         assert rc == 0
         assert out_dir.exists()
+
+
+class TestPersonaCheckCLI:
+    """Unit tests for 'honne persona check' CLI subcommand."""
+
+    def test_persona_check_exists(self):
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        rc = cli_main(["persona", "check", "--persona", str(persona_path)])
+        assert rc == 0
+
+    def test_persona_check_missing(self, tmp_path):
+        persona_path = tmp_path / "nonexistent.json"
+        rc = cli_main(["persona", "check", "--persona", str(persona_path)])
+        assert rc == 66

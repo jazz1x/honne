@@ -1,6 +1,7 @@
-from typing import Union, Optional, List, Iterator
+from typing import Optional, Union
 import hashlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,9 +26,18 @@ def record_claim(
     claim_id = hashlib.sha256(claim_text.encode()).hexdigest()[:16]
 
     if quotes_file:
-        with open(quotes_file, "r", encoding="utf-8") as f:
-            raw = json.load(f)
-        quotes = raw.get("quotes", []) if isinstance(raw, dict) else raw
+        try:
+            with open(quotes_file, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            if isinstance(raw, dict):
+                quotes = raw.get("quotes", [])
+                if "quotes" not in raw:
+                    print(f"warn: quotes file {quotes_file} has no 'quotes' key, defaulting to empty", file=sys.stderr)
+            else:
+                quotes = raw
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
+            print(f"error: failed to read quotes file {quotes_file}: {e}", file=sys.stderr)
+            return 1
     elif quotes_json:
         quotes = json.loads(quotes_json)
     else:
@@ -68,14 +78,14 @@ if __name__ == "__main__":
     parser.add_argument("--run-id")
     args = parser.parse_args()
     exit(record_claim(
-        args.type,
-        args.axis,
-        args.scope,
-        args.claim,
-        args.out,
-        args.support_count,
-        args.prior_id,
-        args.quotes_json,
-        args.run_id,
-        args.quotes_file,
+        type_=args.type,
+        axis=args.axis,
+        scope=args.scope,
+        claim=args.claim,
+        out_path=args.out,
+        support_count=args.support_count,
+        prior_id=args.prior_id,
+        quotes_json=args.quotes_json,
+        run_id=args.run_id,
+        quotes_file=args.quotes_file,
     ))

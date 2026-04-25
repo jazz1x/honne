@@ -21,6 +21,7 @@
 | **compare** | `/honne:compare` | 읽기 전용 회고. 누적 자산을 읽어 시간축 변화를 제시. transcript 재스캔 / LLM 재분석 없음. |
 | **persona** | `/honne:persona` | 안티패턴 & 시그니처 축으로부터 두 개의 독립적 인격 생성. `.md` 파일로 `/honne:crush`에서 사용하기 위해 저장. |
 | **crush** | `/honne:crush` | 두 인격이 주제를 놓고 라이브 토론. 인격 파일을 읽고 5 턴 대본과 판결 생성. |
+| **setup** | `/honne:setup` | 일회성 `allowedTools` 등록. 현재 상태 감지, 권한 항목 생성, 프로젝트 설정에 자동 적용 옵션. |
 
 각 스킬은 독립적으로 동작하며, **파일 기반 공유 산출물** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`) 로만 연결됩니다.
 
@@ -73,7 +74,7 @@ Claude Code 세션 안에서 실행:
 기대 출력:
 
 ```
-✓ Installed honne@0.0.2 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.2 — 6 skills registered (whoami, lexi, compare, persona, crush, setup)
 ```
 
 스코프 선택:
@@ -97,6 +98,7 @@ Claude Code 세션 안에서 실행:
 /honne:compare
 /honne:persona
 /honne:crush
+/honne:setup
 ```
 
 `SessionEnd` 훅은 자동 등록 — 추가 설정 없음.

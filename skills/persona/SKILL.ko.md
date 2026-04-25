@@ -34,8 +34,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/person
 신선도 확인:
 
 ```bash
-STALE_DAYS=$(python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)")
+python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)"
 ```
+stdout을 `STALE_DAYS`로 캡처.
 
 `STALE_DAYS`가 7을 초과하면 (`HONNE_PERSONA_STALE_DAYS` 환경변수로 재정의 가능): "persona.json이 {STALE_DAYS}일 전에 마지막으로 업데이트되었습니다. `/honne:whoami` 재실행을 고려하세요."라고 경고합니다. 그 후 계속.
 
@@ -69,9 +70,7 @@ CONFLICT_PAYLOAD = {
 
 (a) 합성 프롬프트 읽기:
 
-```bash
-Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"
-```
+`Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"`
 
 (b) 합성 프롬프트 시스템 지침을 자신에게 적용하고, CONFLICT_PAYLOAD를 사용자 입력으로 사용합니다. STRICT JSON 응답을 생성합니다:
 

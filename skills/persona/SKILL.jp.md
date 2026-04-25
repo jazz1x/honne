@@ -34,8 +34,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/person
 鮮度確認:
 
 ```bash
-STALE_DAYS=$(python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)")
+python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)"
 ```
+stdoutを`STALE_DAYS`としてキャプチャ。
 
 `STALE_DAYS`が7を超える場合（`HONNE_PERSONA_STALE_DAYS`環境変数で上書き可能）: "persona.jsonは{STALE_DAYS}日前に最後に更新されました。`/honne:whoami`の再実行を検討してください。"と警告します。その後続行。
 
@@ -69,9 +70,7 @@ CONFLICT_PAYLOAD = {
 
 (a) 合成プロンプトを読む:
 
-```bash
-Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"
-```
+`Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"`
 
 (b) 合成プロンプトのシステム指示を自分自身に適用し、CONFLICT_PAYLOADをユーザー入力として使用します。STRICT JSON応答を生成します:
 

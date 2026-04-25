@@ -8,54 +8,92 @@ description: >
 
 # honne — 권한 설정
 
-**호출되면 1단계와 2단계를 순서대로 즉시 실행하세요. 설명하거나 명확화를 요청하지 마세요 — 호출 자체가 요청입니다.**
+**호출되면 1단계부터 3단계까지 순서대로 즉시 실행하세요. 설명하거나 명확화를 요청하지 마세요 — 호출 자체가 요청입니다.**
 
-## 1단계: 플러그인 경로 확인 후 allowedTools 조각 출력
-
-실제 플러그인 설치 경로를 확인하고 조각을 출력하려면 다음 bash 블록을 실행하세요:
-
-```bash
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
-cat <<EOF
-다음 항목을 ~/.claude/settings.json의 "allowedTools" 배열에 추가하세요:
-
-  "Bash(bash ${PLUGIN_ROOT}/scripts/honne *)",
-  "Bash(bash \"${PLUGIN_ROOT}/scripts/honne\" *)",
-  "Bash(python3 -c *)",
-  "Bash(python3 ${PLUGIN_ROOT}/*)",
-  "Write(.honne/**)"
-
-allowedTools가 아직 없으면 최상위 배열로 생성하세요.
-추가 후 다시 /honne:setup을 실행하여 확인하세요.
-EOF
-```
-
-사용자에게 안내 사항:
-- `Bash(bash ...)` 두 항목은 honne 스크립트의 인용부호 있는 호출과 없는 호출을 모두 커버합니다 (SKILL.md는 인용부호 버전 사용).
-- `Write(.honne/**)`은 cache/assets 출력 시 파일 쓰기 프롬프트(리디렉션 `>` 포함)를 억제합니다.
-
-## 2단계: 현재 구성 확인
-
-다음 명령을 실행하여 현재 설정을 검사합니다:
+## 1단계: 현재 상태 확인
 
 ```bash
 python3 -c "
-import json, os
-p = os.path.expanduser('~/.claude/settings.json')
-if not os.path.exists(p):
-    print('settings.json not found')
-    exit(1)
-d = json.load(open(p))
-tools = d.get('allowedTools', [])
-honne = [t for t in tools if 'honne' in t or '.honne' in t]
-print(f'honne entries: {len(honne)}')
-for t in honne:
-    print(' ', t)
+import json, os, sys
+paths = [
+    os.path.expanduser('~/.claude/settings.json'),
+    os.path.expanduser('~/.claude/projects/' + os.getcwd().replace('/', '-') + '/settings.json'),
+]
+for p in paths:
+    if os.path.exists(p):
+        d = json.load(open(p))
+        tools = d.get('allowedTools', [])
+        honne = [t for t in tools if 'honne' in t or '.honne' in t]
+        print(f'{p}: {len(honne)} honne 항목')
+        for t in honne:
+            print(f'  {t}')
+    else:
+        print(f'{p}: 없음')
 "
 ```
 
-결과 해석:
-- **0개 항목**: "아직 설정되지 않았습니다. 위의 조각을 allowedTools에 붙여넣으세요."
-- **≥1개 항목**: "설정됨. {N}개의 honne 항목이 등록되었습니다."
+## 2단계: allowedTools 조각 생성
 
-**참고**: 이 스킬은 구성 지침만 출력합니다 — `~/.claude/settings.json`에 쓰지 않습니다. 모든 변경은 당신이 제어합니다.
+```bash
+python3 -c "
+import json
+entries = [
+    'Bash(bash */scripts/honne *)',
+    'Bash(bash */scripts/query-assets.sh *)',
+    'Bash(python3 -c *)',
+    'Bash(date -u *)',
+    'Write(.honne/**)',
+]
+print(json.dumps(entries, indent=2))
+"
+```
+
+결과를 보여주고 설명:
+- `bash */scripts/honne *` — 모든 honne CLI 명령 (scan, axis run, record, render, persona check). 와일드카드 접두어로 어떤 설치 경로든 매칭.
+- `bash */scripts/query-assets.sh *` — compare 스킬용 자산 쿼리
+- `python3 -c *` — 인라인 체크 (staleness, JSON 추출, 경로 확인)
+- `date -u *` — render용 UTC 타임스탬프
+- `Write(.honne/**)` — `.honne/` 디렉토리 파일 쓰기 (cache, personas, assets)
+
+## 3단계: 설정 적용
+
+사용자에게 질문: "프로젝트 설정에 적용할까요? (yes / no / 경로만 표시)"
+
+- **yes** → 실행:
+
+```bash
+python3 -c "
+import json, os, sys
+project_key = os.getcwd().replace('/', '-')
+settings_path = os.path.expanduser(f'~/.claude/projects/{project_key}/settings.json')
+os.makedirs(os.path.dirname(settings_path), exist_ok=True)
+if os.path.exists(settings_path):
+    settings = json.load(open(settings_path))
+else:
+    settings = {}
+tools = settings.get('allowedTools', [])
+new_entries = [
+    'Bash(bash */scripts/honne *)',
+    'Bash(bash */scripts/query-assets.sh *)',
+    'Bash(python3 -c *)',
+    'Bash(date -u *)',
+    'Write(.honne/**)',
+]
+added = 0
+for entry in new_entries:
+    if entry not in tools:
+        tools.append(entry)
+        added += 1
+settings['allowedTools'] = tools
+with open(settings_path, 'w') as f:
+    json.dump(settings, f, indent=2)
+    f.write('\n')
+print(f'{settings_path}에 저장됨')
+print(f'{added}개 항목 추가 (총 {len(tools)}개 allowedTools)')
+"
+```
+
+- **no** → 출력: "위 항목을 `~/.claude/settings.json` 또는 프로젝트 설정에 수동으로 복사하세요."
+- **경로만 표시** → 프로젝트 설정 경로 출력.
+
+**참고**: 프로젝트 수준 설정이 전역 설정보다 선호됩니다 — 이 리포지토리에만 권한을 범위 제한합니다.

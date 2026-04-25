@@ -21,6 +21,7 @@ Everything runs locally. No network calls, no analytics. Claims are extracted an
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
 | **persona** | `/honne:persona` | Generates two independent personas from antipattern & signature axes. Outputs standalone `.md` files for use with `/honne:crush`. |
 | **crush** | `/honne:crush` | Stages a live debate between the two personas on any topic. Reads persona files and produces a 5-turn transcript with judge verdict. |
+| **setup** | `/honne:setup` | One-time `allowedTools` registration. Detects current state, generates permission entries, optionally auto-applies to project settings. |
 
 Each skill operates in its own orbit, connected only through **shared artifacts on disk** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`).
 
@@ -73,7 +74,7 @@ Expected output:
 Expected output:
 
 ```
-✓ Installed honne@0.0.2 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.2 — 6 skills registered (whoami, lexi, compare, persona, crush, setup)
 ```
 
 Scope options:
@@ -97,6 +98,7 @@ You should see `honne` in the list. If the slash commands below autocomplete, yo
 /honne:compare
 /honne:persona
 /honne:crush
+/honne:setup
 ```
 
 The `SessionEnd` hook is registered automatically — no extra configuration.

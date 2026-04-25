@@ -28,12 +28,13 @@ Split-persona pivot: two independent personas generated separately, then debated
 #### Templates (3 locales: ko / en / jp)
 
 - `persona_synthesis_prompt.{locale}.md` — LLM synthesis template for split-persona generation (antipattern ≤1000 tokens, signature ≤1000 tokens, judge ≤500 tokens)
-- `persona_render.{locale}.md` — minimal template for persona file output: `# {name}`, `> {oneliner}`, `---`, `{system_prompt}`
+- `persona_render.md` — locale-agnostic template for persona file output: `# {name}`, `> {oneliner}`, `---`, `{system_prompt}`
 
 #### Skills
 
 - `persona` (ko / en / jp): 5-step flow — locale HITL → persona.json validation → conflict payload → LLM synthesis → render personas (generation-only, no activation)
 - `crush` (ko / en / jp): 6-step debate orchestrator — topic input → persona validation → live 5-turn transcript with judge
+- `setup` (ko / en / jp): 3-step permission configurator — detect current state → generate allowedTools entries → auto-apply to project settings
 
 #### CLI
 
@@ -57,11 +58,31 @@ Split-persona pivot: two independent personas generated separately, then debated
 - `scripts/honne_py/persona_prompt.py`: deleted `render_persona_prompt` + `_load_persona_prompt_template`; kept `build_conflict_payload`, added `render_personas`
 - `scripts/honne_py/cli.py`: removed `render persona-prompt` subparser; added `render personas` + `persona check` subparsers
 - `skills/persona/SKILL.md` (+ ko / jp): Step 4-5 rewritten for new schema; Step 2 now uses `persona check`; Step 5 output no longer claims activation
-- Documentation: README.md / README.ko.md / README.jp.md updated for version 0.0.2, persona redesign, and new crush skill
+- Documentation: README.md / README.ko.md / README.jp.md updated for version 0.0.2, persona redesign, crush + setup skills
+- `skills/whoami/SKILL.md` (+ ko / jp): bash blocks restructured — variable assignments removed, stdout capture pattern adopted for `allowedTools` matchability; version bumped to 0.0.2
+- `skills/crush/SKILL.md` (+ ko / jp): raw bash file checks replaced with `honne persona check` CLI calls
+- `skills/compare/SKILL.md` (+ ko / jp): `HONNE_ROOT` variable removed; direct `${CLAUDE_PLUGIN_ROOT}` usage
+- `persona_render.md`: consolidated from 3 identical locale-specific templates to single file
+- `skills/setup/SKILL.md` (+ ko / jp): `allowedTools` patterns changed from absolute `CLAUDE_PLUGIN_ROOT` paths to portable wildcard globs (`bash */scripts/honne *`); `CLAUDE_PLUGIN_ROOT` dependency removed from setup flow
+- `skills/setup/SKILL.md` (+ ko / jp): project key derivation fixed — removed erroneous `.lstrip('-')` that broke settings path resolution
+
+### Fixed
+
+- `scripts/honne_py/__init__.py`: version bumped `0.0.1` → `0.0.2`
+- `scripts/honne_py/record.py`: added missing `Union` import (runtime NameError on `Union[Path, str]` type hint)
+- `scripts/honne_py/record.py`: `--quotes-file` with wrong-schema JSON now warns instead of silent empty fallback
+- `scripts/honne_py/axis.py`: `axis run` with missing scan file now prints error message (was silent exit 66)
+- `scripts/honne_py/persona_prompt.py`: `render personas` with both personas null now warns (was silent empty directory)
+- `scripts/honne_py/persona_prompt.py`: removed dead code (unused persona JSON load in `render_personas`)
+- Unused imports cleaned across 8 Python modules (`extract.py`, `detect_recurrence.py`, `evidence.py`, `index.py`, `query.py`, `record.py`, `persona_prompt.py`)
+- Cross-locale parity: `lexi` and `compare` ko/jp SKILL files aligned with en (missing bash blocks added)
+- `unit_cli_contract_test.py`: added CLI contract tests for `render personas` and `persona check` (0.0.2 commands)
+- `unit_persona_prompt_test.py`: added `TestPersonaCheckCLI` (exit 0/66 tests)
 
 ### Removed
 
-- `persona_prompt.{locale}.md` templates (replaced by `persona_render.{locale}.md`)
+- `persona_prompt.{locale}.md` templates (replaced by `persona_render.md`)
+- `persona_render.{ko,en,jp}.md` (3 identical files → 1 locale-agnostic template)
 - Activation directive output from `/honne:persona` skill (no longer in-session embodiment claim)
 
 ---

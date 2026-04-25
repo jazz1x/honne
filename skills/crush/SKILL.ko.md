@@ -23,18 +23,20 @@ description: >
 존재하는 인격 파일 개수를 셉니다:
 
 ```bash
-A=0; S=0; J=0
-[ -f .honne/personas/antipattern.md ] && A=1
-[ -f .honne/personas/signature.md ] && S=1
-[ -f .honne/personas/judge.md ] && J=1
-echo "a=$A s=$S j=$J"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/antipattern.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/signature.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/judge.md
 ```
 
-결과에 따라 분기:
+각 exit 0 (존재) 또는 exit 66 (미존재). 조합 결과에 따라 분기:
 
-- **세 개 모두 존재 (`a=1 s=1 j=1`)** → 3단계 진행.
-- **모두 없음 (`a=0 s=0 j=0`)** → 사용자에게 알림: "인격이 없습니다. 먼저 `/honne:persona`를 실행해 생성하세요." 중지.
-- **일부만 존재 (`a+s+j` ∈ {1,2})** → 사용자에게 알림: "토론은 antipattern·signature 인격과 심판자가 모두 필요합니다. 현재 인격은 한 축만 검출되었습니다. 세션을 더 수집한 뒤 `/honne:whoami` + `/honne:persona`를 재실행하세요." 중지.
+- **세 개 모두 exit 0** → 3단계 진행.
+- **세 개 모두 exit 66** → 사용자에게 알림: "인격이 없습니다. 먼저 `/honne:persona`를 실행해 생성하세요." 중지.
+- **혼합** → 사용자에게 알림: "토론은 antipattern·signature 인격과 심판자가 모두 필요합니다. 현재 인격은 한 축만 검출되었습니다. 세션을 더 수집한 뒤 `/honne:whoami` + `/honne:persona`를 재실행하세요." 중지.
 
 ## 3단계: 인격 로드
 

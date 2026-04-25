@@ -34,8 +34,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/person
 Check staleness:
 
 ```bash
-STALE_DAYS=$(python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)")
+python3 -c "import json,datetime; d=json.load(open('.honne/persona.json')); ts=datetime.datetime.fromisoformat(d.get('generated_at','2000-01-01T00:00:00Z').replace('Z','+00:00')); print((datetime.datetime.now(datetime.timezone.utc)-ts).days)"
 ```
+Capture stdout as `STALE_DAYS`.
 
 If `STALE_DAYS` exceeds 7 (or the value of `HONNE_PERSONA_STALE_DAYS` if set): warn "persona.json last updated {STALE_DAYS} days ago — consider re-running `/honne:whoami`." Then continue.
 
@@ -69,9 +70,7 @@ Do NOT use `python3 << 'EOF'` or any heredoc. Assemble the payload in your menta
 
 (a) Read synthesis prompt:
 
-```bash
-Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"
-```
+`Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${LOCALE}.md"`
 
 (b) Apply the synthesis prompt system instructions to yourself, with CONFLICT_PAYLOAD as the user input. Produce a STRICT JSON response:
 

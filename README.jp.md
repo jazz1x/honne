@@ -21,6 +21,7 @@
 | **compare** | `/honne:compare` | 読み取り専用の振り返り。蓄積された資産を読み、経時的な変化を提示。transcript 再スキャン / LLM 再分析なし。 |
 | **persona** | `/honne:persona` | アンチパターン & シグネチャ軸から 2 つの独立したペルソナを生成。`.md` ファイルとして `/honne:crush` で使用するために保存。 |
 | **crush** | `/honne:crush` | 2 つのペルソナがトピックについてライブ討論。ペルソナファイルを読み、5 ターンのトランスクリプトと判決を生成。 |
+| **setup** | `/honne:setup` | 一回限りの `allowedTools` 登録。現在の状態を検出し、権限エントリを生成し、プロジェクト設定に自動適用オプション。 |
 
 各スキルは独立した軌道で動作し、**ファイルベースの共有成果物** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`) でのみ接続されます。
 
@@ -73,7 +74,7 @@ Claude Code セッション内で実行:
 期待される出力:
 
 ```
-✓ Installed honne@0.0.2 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.2 — 6 skills registered (whoami, lexi, compare, persona, crush, setup)
 ```
 
 スコープの選択:
@@ -97,6 +98,7 @@ Claude Code セッション内で実行:
 /honne:compare
 /honne:persona
 /honne:crush
+/honne:setup
 ```
 
 `SessionEnd` フックは自動登録 — 追加設定不要。

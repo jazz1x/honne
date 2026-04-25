@@ -23,18 +23,20 @@ Set `TOPIC` from the reply.
 Count which persona files exist:
 
 ```bash
-A=0; S=0; J=0
-[ -f .honne/personas/antipattern.md ] && A=1
-[ -f .honne/personas/signature.md ] && S=1
-[ -f .honne/personas/judge.md ] && J=1
-echo "a=$A s=$S j=$J"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/antipattern.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/signature.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/judge.md
 ```
 
-Branch on the result:
+Each returns exit 0 (exists) or exit 66 (missing). Branch on the combined result:
 
-- **All three present (`a=1 s=1 j=1`)** → proceed to Step 3.
-- **Nothing present (`a=0 s=0 j=0`)** → tell user: "No personas found. Run `/honne:persona` first to generate them." Stop.
-- **Partial (`a+s+j` ∈ {1,2})** → tell user: "Debate requires both antipattern and signature personas plus a judge. Your persona has only one axis represented. Collect more sessions and re-run `/honne:whoami` + `/honne:persona` to generate a full set." Stop.
+- **All three exit 0** → proceed to Step 3.
+- **All three exit 66** → tell user: "No personas found. Run `/honne:persona` first to generate them." Stop.
+- **Mixed** → tell user: "Debate requires both antipattern and signature personas plus a judge. Your persona has only one axis represented. Collect more sessions and re-run `/honne:whoami` + `/honne:persona` to generate a full set." Stop.
 
 ## Step 3: Load Personas
 

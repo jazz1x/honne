@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Union, Dict, Any, Optional
+from typing import Union
 import json
 import sys
-import re
 
 
 def build_conflict_payload(persona_path: Union[Path, str], locale: str) -> dict:
@@ -135,15 +134,8 @@ def render_personas(
         print(f"error: persona file not found: {persona_path}", file=sys.stderr)
         return 66
 
-    try:
-        with open(persona_path, "r", encoding="utf-8") as f:
-            persona = json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"error: failed to parse {persona_path}: {e}", file=sys.stderr)
-        return 66
-
     # 3. Load template
-    template_path = Path(__file__).parent.parent.parent / "skills" / "persona" / "templates" / f"persona_render.{locale}.md"
+    template_path = Path(__file__).parent.parent.parent / "skills" / "persona" / "templates" / "persona_render.md"
     if not template_path.exists():
         print(f"error: template not found: {template_path}", file=sys.stderr)
         return 2
@@ -159,6 +151,10 @@ def render_personas(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 5. Render persona files
+    if synthesis.get("persona_antipattern") is None and synthesis.get("persona_signature") is None:
+        print("warn: no personas to render (both null)", file=sys.stderr)
+        return 0
+
     if synthesis.get("persona_antipattern") is not None:
         antipattern = synthesis["persona_antipattern"]
         rendered = template.format(

@@ -217,6 +217,35 @@ def test_cli_render_persona_passes_narrative(tmp_path):
     assert persona["axes"]["lexicon"]["explanation"] == "expected explanation"
 
 
+# ── render personas (0.0.2) ──────────────────────────────────────────────────
+
+def test_render_personas_args(tmp_path):
+    synthesis = tmp_path / "synthesis.json"
+    persona = tmp_path / "persona.json"
+    out_dir = tmp_path / "personas"
+    with patch("honne_py.persona_prompt.render_personas", return_value=0):
+        main(["render", "personas",
+              "--synthesis", str(synthesis),
+              "--persona", str(persona),
+              "--locale", "ko",
+              "--out-dir", str(out_dir)])
+
+
+# ── persona check (0.0.2) ───────────────────────────────────────────────────
+
+def test_persona_check_exists(tmp_path):
+    persona = tmp_path / "persona.json"
+    persona.write_text("{}")
+    rc = main(["persona", "check", "--persona", str(persona)])
+    assert rc == 0
+
+
+def test_persona_check_missing(tmp_path):
+    persona = tmp_path / "nonexistent.json"
+    rc = main(["persona", "check", "--persona", str(persona)])
+    assert rc == 66
+
+
 # ── ritual frequency (counters lookup) ───────────────────────────────────────
 
 def test_summarize_ritual_uses_counters_for_frequency():

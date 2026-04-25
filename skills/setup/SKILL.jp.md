@@ -8,54 +8,92 @@ description: >
 
 # honne — 権限設定
 
-**呼び出されたら、ステップ1とステップ2を順番に実行してください。説明したり、明確化を求めたりしないでください — 呼び出し自体がリクエストです。**
+**呼び出されたら、ステップ1からステップ3まで順番に実行してください。説明したり、明確化を求めたりしないでください — 呼び出し自体がリクエストです。**
 
-## ステップ1: プラグインルートを解決し allowedTools フラグメントを出力
-
-実際のプラグインインストールパスを解決してフラグメントを出力するには、次の bash ブロックを実行します:
-
-```bash
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
-cat <<EOF
-次のエントリを ~/.claude/settings.json の "allowedTools" 配列に追加してください:
-
-  "Bash(bash ${PLUGIN_ROOT}/scripts/honne *)",
-  "Bash(bash \"${PLUGIN_ROOT}/scripts/honne\" *)",
-  "Bash(python3 -c *)",
-  "Bash(python3 ${PLUGIN_ROOT}/*)",
-  "Write(.honne/**)"
-
-allowedTools がまだない場合は、トップレベル配列として作成してください。
-追加後、/honne:setup を再度実行して確認してください。
-EOF
-```
-
-ユーザーへの注意:
-- 2つの `Bash(bash ...)` エントリは honne スクリプトの引用符ありと引用符なし両方の呼び出しをカバーします (SKILL.md は引用符版を使用)。
-- `Write(.honne/**)` は cache/assets 出力時のファイル書き込みプロンプト(`>` リダイレクト含む)を抑制します。
-
-## ステップ2: 現在の構成を確認
-
-現在の設定を検査するために次のコマンドを実行します:
+## ステップ1: 現在の状態を検出
 
 ```bash
 python3 -c "
-import json, os
-p = os.path.expanduser('~/.claude/settings.json')
-if not os.path.exists(p):
-    print('settings.json not found')
-    exit(1)
-d = json.load(open(p))
-tools = d.get('allowedTools', [])
-honne = [t for t in tools if 'honne' in t or '.honne' in t]
-print(f'honne entries: {len(honne)}')
-for t in honne:
-    print(' ', t)
+import json, os, sys
+paths = [
+    os.path.expanduser('~/.claude/settings.json'),
+    os.path.expanduser('~/.claude/projects/' + os.getcwd().replace('/', '-') + '/settings.json'),
+]
+for p in paths:
+    if os.path.exists(p):
+        d = json.load(open(p))
+        tools = d.get('allowedTools', [])
+        honne = [t for t in tools if 'honne' in t or '.honne' in t]
+        print(f'{p}: {len(honne)} honneエントリ')
+        for t in honne:
+            print(f'  {t}')
+    else:
+        print(f'{p}: なし')
 "
 ```
 
-結果の解釈:
-- **0項目**: "まだ設定されていません。上のフラグメントをallowedToolsに貼り付けてください。"
-- **≥1項目**: "設定済み。{N}個のhonneエントリが登録されています。"
+## ステップ2: allowedToolsフラグメントを生成
 
-**注**: このスキルは構成指示のみを出力します — `~/.claude/settings.json` に書き込みません。すべての変更はあなたが制御します。
+```bash
+python3 -c "
+import json
+entries = [
+    'Bash(bash */scripts/honne *)',
+    'Bash(bash */scripts/query-assets.sh *)',
+    'Bash(python3 -c *)',
+    'Bash(date -u *)',
+    'Write(.honne/**)',
+]
+print(json.dumps(entries, indent=2))
+"
+```
+
+結果を表示して説明:
+- `bash */scripts/honne *` — すべてのhonne CLIコマンド（scan、axis run、record、render、persona check）。ワイルドカードプレフィックスで任意のインストールパスにマッチ。
+- `bash */scripts/query-assets.sh *` — compareスキル用のアセットクエリ
+- `python3 -c *` — インラインチェック（staleness、JSON抽出、パス解決）
+- `date -u *` — render用のUTCタイムスタンプ
+- `Write(.honne/**)` — `.honne/`ディレクトリへのファイル書き込み（cache、personas、assets）
+
+## ステップ3: 設定を適用
+
+ユーザーに質問: "プロジェクト設定に適用しますか？ (yes / no / パスのみ表示)"
+
+- **yes** → 実行:
+
+```bash
+python3 -c "
+import json, os, sys
+project_key = os.getcwd().replace('/', '-')
+settings_path = os.path.expanduser(f'~/.claude/projects/{project_key}/settings.json')
+os.makedirs(os.path.dirname(settings_path), exist_ok=True)
+if os.path.exists(settings_path):
+    settings = json.load(open(settings_path))
+else:
+    settings = {}
+tools = settings.get('allowedTools', [])
+new_entries = [
+    'Bash(bash */scripts/honne *)',
+    'Bash(bash */scripts/query-assets.sh *)',
+    'Bash(python3 -c *)',
+    'Bash(date -u *)',
+    'Write(.honne/**)',
+]
+added = 0
+for entry in new_entries:
+    if entry not in tools:
+        tools.append(entry)
+        added += 1
+settings['allowedTools'] = tools
+with open(settings_path, 'w') as f:
+    json.dump(settings, f, indent=2)
+    f.write('\n')
+print(f'{settings_path}に書き込み')
+print(f'{added}エントリ追加（合計{len(tools)}個のallowedTools）')
+"
+```
+
+- **no** → 出力: "上のエントリを `~/.claude/settings.json` またはプロジェクト設定に手動でコピーしてください。"
+- **パスのみ表示** → プロジェクト設定パスを出力。
+
+**注**: プロジェクトレベルの設定がグローバル設定より推奨されます — このリポジトリにのみ権限をスコープ制限します。

@@ -23,18 +23,20 @@ description: >
 存在するペルソナファイル数をカウント:
 
 ```bash
-A=0; S=0; J=0
-[ -f .honne/personas/antipattern.md ] && A=1
-[ -f .honne/personas/signature.md ] && S=1
-[ -f .honne/personas/judge.md ] && J=1
-echo "a=$A s=$S j=$J"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/antipattern.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/signature.md
+```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/personas/judge.md
 ```
 
-結果に応じて分岐:
+各 exit 0（存在）または exit 66（不在）。組み合わせ結果に応じて分岐:
 
-- **3つとも存在 (`a=1 s=1 j=1`)** → ステップ3へ進む。
-- **何も存在しない (`a=0 s=0 j=0`)** → ユーザーへ通知: "ペルソナがありません。まず `/honne:persona` を実行して生成してください。" 停止。
-- **一部のみ存在 (`a+s+j` ∈ {1,2})** → ユーザーへ通知: "ディベートには antipattern・signature ペルソナと審判者がすべて必要です。現在のペルソナは1軸のみ検出されました。セッションを追加収集し `/honne:whoami` + `/honne:persona` を再実行してください。" 停止。
+- **3つとも exit 0** → ステップ3へ進む。
+- **3つとも exit 66** → ユーザーへ通知: "ペルソナがありません。まず `/honne:persona` を実行して生成してください。" 停止。
+- **混合** → ユーザーへ通知: "ディベートには antipattern・signature ペルソナと審判者がすべて必要です。現在のペルソナは1軸のみ検出されました。セッションを追加収集し `/honne:whoami` + `/honne:persona` を再実行してください。" 停止。
 
 ## ステップ3: ペルソナロード
 
