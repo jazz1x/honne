@@ -1,4 +1,4 @@
-"""Unit tests for persona_prompt — build_conflict_payload + render_persona_prompt."""
+"""Unit tests for persona_prompt — build_conflict_payload + render_personas."""
 import json
 import sys
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-from honne_py.persona_prompt import build_conflict_payload, render_persona_prompt
+from honne_py.persona_prompt import build_conflict_payload, render_personas
 
 
 class TestBuildConflictPayload:
@@ -80,209 +80,116 @@ class TestBuildConflictPayload:
         assert len(supporting) >= 5
 
 
-class TestRenderPersonaPrompt:
-    """Test render_persona_prompt with various inputs."""
+class TestRenderPersonas:
+    """Test render_personas with various inputs."""
 
-    def test_render_full(self, tmp_path):
-        """Test successful render with both axes present — must include debate + activation directive."""
+    def test_render_both_personas(self, tmp_path):
+        """Test successful render with both personas + judge."""
         persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
         synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "persona-prompt.md"
+        out_dir = tmp_path / "personas"
 
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
 
         assert rc == 0
-        assert out_path.exists()
+        assert (out_dir / "antipattern.md").exists()
+        assert (out_dir / "signature.md").exists()
+        assert (out_dir / "judge.md").exists()
 
-        content = out_path.read_text(encoding="utf-8")
-        assert "범위수렴형" in content  # character_oneliner
-        assert "당신은" in content  # "Who you are" section
-        assert "시그니처 패턴" in content
-        assert "주의할 점" in content
-        assert "시스템 프롬프트" in content
-        # debate section rendered
-        assert "내면의 충돌" in content
-        assert "antipattern" in content
-        assert "signature" in content
-        # activation directive rendered
-        assert "활성화 지시" in content
-        assert "중립적 Claude로 돌아가지" in content
+        # Check content
+        antipattern_content = (out_dir / "antipattern.md").read_text(encoding="utf-8")
+        assert "과잉명세형" in antipattern_content
+        assert "당신은" in antipattern_content
 
-    def test_render_missing_debate_when_conflict_true(self, tmp_path):
-        """conflict_present=true but debate missing → exit 66."""
+        signature_content = (out_dir / "signature.md").read_text(encoding="utf-8")
+        assert "정밀타격형" in signature_content
+        assert "당신은" in signature_content
+
+        judge_content = (out_dir / "judge.md").read_text(encoding="utf-8")
+        assert "심판자" in judge_content or "판결" in judge_content
+
+    def test_render_antipattern_only(self, tmp_path):
+        """Test render with only antipattern (signature null)."""
         persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = tmp_path / "bad.json"
-        synthesis_path.write_text(json.dumps({
-            "verdict": "x",
-            "character_oneliner": "y",
-            "system_prompt": "z",
-            "conflict_present": True
-        }))
-        out_path = tmp_path / "out.md"
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-        assert rc == 66
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_no_signature.json"
+        out_dir = tmp_path / "personas"
 
-    def test_render_partial_debate_rejected(self, tmp_path):
-        """conflict_present=true with incomplete debate → exit 66."""
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 0
+        assert (out_dir / "antipattern.md").exists()
+        assert not (out_dir / "signature.md").exists()
+        assert not (out_dir / "judge.md").exists()
+
+    def test_render_signature_only(self, tmp_path):
+        """Test render with only signature (antipattern null)."""
         persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = tmp_path / "bad.json"
-        synthesis_path.write_text(json.dumps({
-            "verdict": "x",
-            "character_oneliner": "y",
-            "system_prompt": "z",
-            "conflict_present": True,
-            "debate": {"antipattern_voice": "a"}
-        }))
-        out_path = tmp_path / "out.md"
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-        assert rc == 66
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_no_antipattern.json"
+        out_dir = tmp_path / "personas"
 
-    def test_render_conflict_false_with_null_debate(self, tmp_path):
-        """conflict_present=false with explicit debate:null → render succeeds, debate skipped."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_no_antipattern.json"
-        synthesis_path = tmp_path / "ok.json"
-        synthesis_path.write_text(json.dumps({
-            "verdict": "단일 축 포트레이트",
-            "character_oneliner": "정밀 타겟터",
-            "system_prompt": "당신은 정밀 타겟터입니다.",
-            "conflict_present": False,
-            "debate": None
-        }))
-        out_path = tmp_path / "out.md"
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-        assert rc == 0
-        content = out_path.read_text(encoding="utf-8")
-        assert "내면의 충돌" not in content  # debate section omitted
-        assert "활성화 지시" in content       # activation still renders
-
-    def test_render_with_no_antipattern(self, tmp_path):
-        """Test render when antipattern is absent."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_no_antipattern.json"
-        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "persona-prompt.md"
-
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
 
         assert rc == 0
-        content = out_path.read_text(encoding="utf-8")
-        assert "시그니처 패턴" in content
-        assert "주의할 점" not in content
+        assert not (out_dir / "antipattern.md").exists()
+        assert (out_dir / "signature.md").exists()
+        assert not (out_dir / "judge.md").exists()
 
-    def test_render_with_both_axes_null(self, tmp_path):
-        """Test render in portrait mode (both conflict axes absent)."""
+    def test_render_both_null(self, tmp_path):
+        """Test render with both personas null."""
         persona_path = Path(__file__).parent / "fixtures/persona/persona_no_axes.json"
-        synthesis_path = tmp_path / "synthesis.json"
-        synthesis_path.write_text(json.dumps({
-            "verdict": "지속적 정확성 추구형",
-            "character_oneliner": "세심하게 반복하는 사람",
-            "system_prompt": "당신은 정확성을 중시합니다.",
-            "conflict_present": False
-        }))
-        out_path = tmp_path / "persona-prompt.md"
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_no_axes.json"
+        out_dir = tmp_path / "personas"
 
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
 
         assert rc == 0
-        content = out_path.read_text(encoding="utf-8")
-        assert "주의할 점" not in content   # no antipattern → no watch-out section
-        assert "시그니처 패턴" not in content  # no signature → no signature section
+        # No files created, but success (nothing to render)
+        assert not (out_dir / "antipattern.md").exists()
+        assert not (out_dir / "signature.md").exists()
+        assert not (out_dir / "judge.md").exists()
 
-    def test_missing_synthesis_file(self, tmp_path):
-        """Test when synthesis.json does not exist."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = tmp_path / "nonexistent.json"
-        out_path = tmp_path / "out.md"
-
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-
-        assert rc == 66
-
-    def test_missing_persona_file(self, tmp_path):
-        """Test when persona.json does not exist."""
-        persona_path = tmp_path / "nonexistent.json"
-        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "out.md"
-
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-
-        assert rc == 66
-
-    def test_missing_template(self, tmp_path):
-        """Test when template for locale does not exist."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "out.md"
-
-        # Try with a locale that has no template (not ko, en, or jp)
-        rc = render_persona_prompt(synthesis_path, persona_path, "invalid", out_path)
-
-        assert rc == 2
-
-    def test_output_dir_created(self, tmp_path):
-        """Test that output directory is created if it doesn't exist."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "deep/nested/dir/persona-prompt.md"
-
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-
-        assert rc == 0
-        assert out_path.exists()
-        assert out_path.parent.exists()
-
-    def test_render_structure(self, tmp_path):
-        """Test that output has correct markdown structure."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
-        out_path = tmp_path / "persona-prompt.md"
-
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-
-        assert rc == 0
-        content = out_path.read_text(encoding="utf-8")
-
-        # Check for section headers
-        assert "## 당신은" in content or "## Who You Are" in content
-        assert "## 시스템 프롬프트" in content or "## System Prompt" in content
-
-        # Check for system prompt delimiters
-        assert "---" in content
-        lines = content.split('\n')
-        delimiter_count = sum(1 for line in lines if line.strip() == "---")
-        assert delimiter_count >= 2
-
-
-class TestEdgeCases:
-    """Test edge cases and error conditions."""
-
-    def test_empty_synthesis_fields(self, tmp_path):
-        """Test render with empty fields in synthesis."""
-        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
-
-        synthesis_path = tmp_path / "synthesis.json"
-        synthesis_path.write_text(json.dumps({
-            "verdict": "",
-            "character_oneliner": "",
-            "system_prompt": "",
-            "conflict_present": False
-        }))
-
-        out_path = tmp_path / "out.md"
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
-
-        assert rc == 0
-        content = out_path.read_text(encoding="utf-8")
-        # Output should still have structure, even with empty content
-        assert "## 당신은" in content or "## Who You Are" in content
-
-    def test_malformed_synthesis_json(self, tmp_path):
-        """Test with malformed synthesis JSON."""
+    def test_missing_conflict_present_key(self, tmp_path):
+        """Test synthesis missing 'conflict_present' key."""
         persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
         synthesis_path = tmp_path / "bad.json"
-        synthesis_path.write_text("{ bad json }")
-        out_path = tmp_path / "out.md"
+        synthesis_path.write_text(json.dumps({
+            "persona_antipattern": {"name": "x", "oneliner": "y", "system_prompt": "z"}
+        }))
+        out_dir = tmp_path / "personas"
 
-        rc = render_persona_prompt(synthesis_path, persona_path, "ko", out_path)
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 66
+
+    def test_conflict_true_missing_persona_block(self, tmp_path):
+        """Test conflict_present=true but required persona block missing."""
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        synthesis_path = tmp_path / "bad.json"
+        synthesis_path.write_text(json.dumps({
+            "conflict_present": True,
+            "persona_antipattern": {"name": "x", "oneliner": "y", "system_prompt": "z"},
+            "persona_signature": None,
+            "judge_system_prompt": "judge"
+        }))
+        out_dir = tmp_path / "personas"
+
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 66
+
+    def test_persona_block_missing_name(self, tmp_path):
+        """Test persona block missing 'name' field."""
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        synthesis_path = tmp_path / "bad.json"
+        synthesis_path.write_text(json.dumps({
+            "conflict_present": True,
+            "persona_antipattern": {"oneliner": "y", "system_prompt": "z"},  # missing name
+            "persona_signature": {"name": "x", "oneliner": "y", "system_prompt": "z"},
+            "judge_system_prompt": "judge"
+        }))
+        out_dir = tmp_path / "personas"
+
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
 
         assert rc == 66
 
@@ -292,7 +199,50 @@ class TestEdgeCases:
         synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
 
         for locale in ["ko", "en", "jp"]:
-            out_path = tmp_path / f"out_{locale}.md"
-            rc = render_persona_prompt(synthesis_path, persona_path, locale, out_path)
+            out_dir = tmp_path / f"personas_{locale}"
+            rc = render_personas(synthesis_path, persona_path, locale, out_dir)
             assert rc == 0, f"Failed for locale {locale}"
-            assert out_path.exists()
+            assert (out_dir / "antipattern.md").exists()
+            assert (out_dir / "signature.md").exists()
+
+    def test_missing_synthesis_file(self, tmp_path):
+        """Test when synthesis file does not exist."""
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        synthesis_path = tmp_path / "nonexistent.json"
+        out_dir = tmp_path / "personas"
+
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 66
+
+    def test_missing_persona_file(self, tmp_path):
+        """Test when persona file does not exist."""
+        persona_path = tmp_path / "nonexistent.json"
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
+        out_dir = tmp_path / "personas"
+
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 66
+
+    def test_missing_template(self, tmp_path):
+        """Test when template for locale does not exist."""
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
+        out_dir = tmp_path / "personas"
+
+        # Try with a locale that has no template (not ko, en, or jp)
+        rc = render_personas(synthesis_path, persona_path, "invalid", out_dir)
+
+        assert rc == 2
+
+    def test_output_dir_created(self, tmp_path):
+        """Test that output directory is created if it doesn't exist."""
+        persona_path = Path(__file__).parent / "fixtures/persona/persona_full.json"
+        synthesis_path = Path(__file__).parent / "fixtures/persona/synthesis_full.json"
+        out_dir = tmp_path / "deep/nested/dir/personas"
+
+        rc = render_personas(synthesis_path, persona_path, "ko", out_dir)
+
+        assert rc == 0
+        assert out_dir.exists()

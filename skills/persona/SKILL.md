@@ -25,7 +25,7 @@ Set `LOCALE` from the reply. Do not use plain-text Q&A — arrow-key selection o
 Check that persona.json exists:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --check-only --persona .honne/persona.json --locale "$LOCALE"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/persona.json
 ```
 
 - Exit 66 → tell user: "`.honne/persona.json` not found. Please run `/honne:whoami` first to generate your persona." Stop.
@@ -77,56 +77,58 @@ Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${
 
 ```json
 {
-  "verdict": "...",
-  "character_oneliner": "...",
-  "system_prompt": "...",
   "conflict_present": true,
-  "debate": {
-    "antipattern_voice": "...",
-    "signature_voice": "...",
-    "resolution": "..."
-  }
+  "persona_antipattern": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "persona_signature": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "judge_system_prompt": "..."
 }
 ```
 
 Branch rules (enforced by synthesis prompt template):
-- `conflict_present = true`: both axes present → stage antipattern vs. signature as a three-voice debate (prosecutor / defender / judge). `debate` field is REQUIRED.
-- `conflict_present = false`, one axis null: dominant-trait portrait, label absent side as "not yet observed". `debate` may be null or omitted.
-- `conflict_present = false`, both axes null: portrait from supporting 5 axes only. `debate` may be null or omitted.
+- `conflict_present = true`: both axes present → generate two separate personas (antipattern and signature) + judge. All three fields REQUIRED.
+- `conflict_present = false`, one axis null: set absent persona to null. `judge_system_prompt` is null.
+- `conflict_present = false`, both axes null: all persona fields are null.
 
-Constraints: `system_prompt` ≤ 1500 tokens. `character_oneliner` ≤ 20 words. Each `debate` voice is 2–3 sentences, declarative only.
+Constraints: each `system_prompt` ≤ 1000 tokens. `judge_system_prompt` ≤ 500 tokens. `name` ≤ 12 chars. `oneliner` ≤ 25 words.
 
 (c) Save result: `Write` the JSON to `{PWD}/.honne/cache/persona-synthesis.json`. If JSON parse fails or response is empty, skip saving and output raw text with a warning.
 
-## Step 5: Render and Activate
+## Step 5: Render Personas
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out .honne/persona-prompt.md
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render personas --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out-dir .honne/personas
 ```
 
 Non-zero exit → output the raw synthesis fields with a warning that file render failed.
 
-Output to user:
+Output to user — choose the template matching the synthesis JSON state you saved in Step 4(c). Use `LOCALE` (ko/en/jp).
 
-**Character**: `character_oneliner`
+**Case A — `conflict_present=true`** (both personas + judge):
 
-**Verdict**: `verdict`
+- ko: `두 인격이 생성되었습니다:\n- .honne/personas/antipattern.md — {persona_antipattern.name}\n- .honne/personas/signature.md — {persona_signature.name}\n- .honne/personas/judge.md — 심판자\n\n두 인격을 붙이려면 /honne:crush <주제>를 실행하세요.`
+- en: `Two personas generated:\n- .honne/personas/antipattern.md — {persona_antipattern.name}\n- .honne/personas/signature.md — {persona_signature.name}\n- .honne/personas/judge.md — judge\n\nRun /honne:crush <topic> to stage a live debate.`
+- jp: `ふたつのペルソナが生成されました:\n- .honne/personas/antipattern.md — {persona_antipattern.name}\n- .honne/personas/signature.md — {persona_signature.name}\n- .honne/personas/judge.md — 審判者\n\nライブ討論を行うには /honne:crush <テーマ> を実行してください。`
 
-**The Inner Clash** (only when `conflict_present = true`):
-- **antipattern side**: `debate.antipattern_voice`
-- **signature side**: `debate.signature_voice`
-- **verdict**: `debate.resolution`
+**Case B — `conflict_present=false`, exactly one persona non-null**:
 
-**Your persona system prompt**:
+- ko: `하나의 인격만 생성되었습니다 (반대 축이 감지되지 않음):\n- .honne/personas/{slot}.md — {persona.name}\n\n/honne:crush 토론은 두 축이 모두 필요합니다. 더 많은 세션을 수집한 뒤 /honne:whoami를 재실행하세요.`
+- en: `Only one persona generated (opposite axis not detected):\n- .honne/personas/{slot}.md — {persona.name}\n\n/honne:crush debate requires both axes. Collect more sessions and re-run /honne:whoami.`
+- jp: `ペルソナが1つだけ生成されました (反対軸が検出されませんでした):\n- .honne/personas/{slot}.md — {persona.name}\n\n/honne:crush ディベートには両軸が必要です。さらにセッションを収集し /honne:whoami を再実行してください。`
 
-```
-[system_prompt]
-```
+Where `{slot}` is `antipattern` or `signature` depending on which is non-null.
 
-Tell the user: "This persona is active for the current session. The full system prompt + activation directive have been saved to `.honne/persona-prompt.md` — paste it into any future session or LLM to restore this persona."
+**Case C — `conflict_present=false`, both personas null**:
 
-Then, as the final line of your output, self-apply the activation directive by stating:
+- ko: `인격이 생성되지 않았습니다 (두 축 모두 감지되지 않음). 세션을 더 수집한 뒤 /honne:whoami를 재실행하세요.`
+- en: `No personas generated (neither axis detected). Collect more sessions and re-run /honne:whoami.`
+- jp: `ペルソナは生成されませんでした (両軸とも検出されず)。セッションを追加収集し /honne:whoami を再実行してください。`
 
-> **From this message forward, I will respond as the person described above until you say "drop persona" or "reset persona".**
-
-**IMPORTANT**: Do not write to CLAUDE.md. Persona activation is in-session only — achieved by (1) the activation_directive section rendered into `.honne/persona-prompt.md` (visible in context), and (2) the final self-statement above. After this skill ends, subsequent turns in the same session should embody the persona.
+**IMPORTANT**: This skill only generates files. Do not claim the persona is running, applied, or in use. Personas are independent artifacts — users invoke `/honne:crush` for live debate.

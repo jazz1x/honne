@@ -2,7 +2,7 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
-![version](https://img.shields.io/badge/version-0.0.1-blue)
+![version](https://img.shields.io/badge/version-0.0.2-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -19,7 +19,8 @@ Everything runs locally. No network calls, no analytics. Claims are extracted an
 | **whoami** | `/honne:whoami` | Main orchestrator. 7-axis persona with autonomous evidence gathering and LLM narrative synthesis. |
 | **lexi** | `/honne:lexi` | Lexicon axis only (high-frequency vocabulary, code-switching, onomatopoeia). |
 | **compare** | `/honne:compare` | Read-only retrospective. Reads accumulated assets and shows changes over time. No transcript re-scan, no LLM re-analysis. |
-| **persona** | `/honne:persona` | Persona system prompt generator. Synthesizes conflict between antipattern & signature axes for session activation. |
+| **persona** | `/honne:persona` | Generates two independent personas from antipattern & signature axes. Outputs standalone `.md` files for use with `/honne:crush`. |
+| **crush** | `/honne:crush` | Stages a live debate between the two personas on any topic. Reads persona files and produces a 5-turn transcript with judge verdict. |
 
 Each skill operates in its own orbit, connected only through **shared artifacts on disk** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`).
 
@@ -72,7 +73,7 @@ Expected output:
 Expected output:
 
 ```
-✓ Installed honne@0.0.1 — 3 skills registered (whoami, lexi, compare)
+✓ Installed honne@0.0.2 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 Scope options:
@@ -88,12 +89,14 @@ Scope options:
 /plugin list
 ```
 
-You should see `honne` in the list. If the three canonical slash commands below autocomplete, you're good:
+You should see `honne` in the list. If the slash commands below autocomplete, you're good:
 
 ```
 /honne:whoami
 /honne:lexi
 /honne:compare
+/honne:persona
+/honne:crush
 ```
 
 The `SessionEnd` hook is registered automatically — no extra configuration.

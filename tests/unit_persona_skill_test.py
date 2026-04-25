@@ -48,10 +48,10 @@ class TestSkillFilesExist:
 
 
 class TestSkillStep2:
-    def test_check_only_flag_present(self):
+    def test_persona_check_cmd_present(self):
         for locale in ["en", "ko", "jp"]:
             step2 = _skill_step(locale, 2)
-            assert "--check-only" in step2, f"--check-only missing from Step 2 ({locale})"
+            assert "persona check" in step2, f"persona check cmd missing from Step 2 ({locale})"
 
     def test_persona_json_path_in_step2(self):
         for locale in ["en", "ko", "jp"]:
@@ -105,15 +105,15 @@ class TestSkillStep4:
 
 
 class TestSkillStep5:
-    def test_persona_prompt_md_in_step5(self):
+    def test_personas_dir_in_step5(self):
         for locale in ["en", "ko", "jp"]:
             step5 = _skill_step(locale, 5)
-            assert "persona-prompt.md" in step5, f"persona-prompt.md missing from Step 5 ({locale})"
+            assert ".honne/personas" in step5, f".honne/personas missing from Step 5 ({locale})"
 
-    def test_render_persona_prompt_cmd_in_step5(self):
+    def test_render_personas_cmd_in_step5(self):
         for locale in ["en", "ko", "jp"]:
             step5 = _skill_step(locale, 5)
-            assert "render persona-prompt" in step5, f"render persona-prompt cmd missing from Step 5 ({locale})"
+            assert "render personas" in step5, f"render personas cmd missing from Step 5 ({locale})"
 
 
 class TestNoCLAUDEmdInjection:
@@ -173,15 +173,15 @@ class TestSynthesisPromptTemplates:
             content = tmpl.read_text(encoding="utf-8")
             assert "conflict_present" in content, f"conflict_present missing in synthesis prompt ({locale})"
 
-    def test_templates_have_debate_contract(self):
-        """All synthesis templates must reference the debate schema keys."""
+    def test_templates_have_split_persona_contract(self):
+        """All synthesis templates must reference the split-persona schema keys."""
         tmpl_dir = SKILL_ROOT / "templates"
-        required_keys = ["debate", "antipattern_voice", "signature_voice", "resolution"]
+        required_keys = ["persona_antipattern", "persona_signature", "judge_system_prompt"]
         for locale in ["ko", "en", "jp"]:
             tmpl = tmpl_dir / f"persona_synthesis_prompt.{locale}.md"
             content = tmpl.read_text(encoding="utf-8")
             for key in required_keys:
-                assert key in content, f"debate contract key '{key}' missing in synthesis prompt ({locale})"
+                assert key in content, f"split-persona key '{key}' missing in synthesis prompt ({locale})"
 
     def test_templates_forbid_invented_claims(self):
         tmpl_dir = SKILL_ROOT / "templates"
@@ -194,12 +194,14 @@ class TestSynthesisPromptTemplates:
             assert has_prohibition, \
                 f"synthesis prompt ({locale}) missing explicit prohibition against inventing claims"
 
-    def test_templates_mention_token_limit(self):
+    def test_templates_mention_token_limits(self):
         tmpl_dir = SKILL_ROOT / "templates"
         for locale in ["ko", "en", "jp"]:
             tmpl = tmpl_dir / f"persona_synthesis_prompt.{locale}.md"
             content = tmpl.read_text(encoding="utf-8")
-            assert "1500" in content, f"1500 token limit not mentioned in synthesis prompt ({locale})"
+            # New split schema has 1000 for personas, 500 for judge
+            assert "1000" in content, f"1000 token limit not mentioned in synthesis prompt ({locale})"
+            assert "500" in content, f"500 token limit not mentioned in synthesis prompt ({locale})"
 
 
 class TestWhoamiSkillNoTmpWrites:
@@ -229,6 +231,31 @@ class TestWhoamiSkillNoTmpWrites:
                 if in_bash_block and "/tmp" in line:
                     assert False, \
                         f"whoami SKILL{suffix}.md:{line_no} — /tmp write in bash block (use .honne/cache/ instead): {line!r}"
+
+
+class TestNoActivationLanguage:
+    """PRD §7.2 HARD guardrail: /honne:persona body must not contain activation
+    language. Literal grep must return 0 matches across all locales.
+
+    Banned tokens per PRD: '활성화', 'active', 'embody', 'from now on', '活性化'.
+    Tokens are checked case-insensitively except for exact-CJK tokens.
+    """
+
+    BANNED_ASCII = ("active", "embody", "from now on")
+    BANNED_CJK = ("활성화", "活性化")
+
+    def test_skill_body_has_no_activation_tokens(self):
+        for locale in ["en", "ko", "jp"]:
+            content = _read_skill(locale)
+            lower = content.lower()
+            for token in self.BANNED_ASCII:
+                assert token not in lower, (
+                    f"banned activation token {token!r} found in SKILL ({locale})"
+                )
+            for token in self.BANNED_CJK:
+                assert token not in content, (
+                    f"banned activation token {token!r} found in SKILL ({locale})"
+                )
 
 
 class TestPluginJson:

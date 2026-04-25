@@ -25,7 +25,7 @@ description: >
 persona.jsonの存在確認:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --check-only --persona .honne/persona.json --locale "$LOCALE"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/persona.json
 ```
 
 - Exit 66 → ユーザーへ通知: "`.honne/persona.json`が見つかりません。まず`/honne:whoami`を実行してペルソナを生成してください。" 停止。
@@ -77,58 +77,60 @@ Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${
 
 ```json
 {
-  "verdict": "...",
-  "character_oneliner": "...",
-  "system_prompt": "...",
   "conflict_present": true,
-  "debate": {
-    "antipattern_voice": "...",
-    "signature_voice": "...",
-    "resolution": "..."
-  }
+  "persona_antipattern": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "persona_signature": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "judge_system_prompt": "..."
 }
 ```
 
-`conflict_present = true` の場合、`debate` フィールドは **必須** です (antipattern 側 / signature 側 / 判決の 3 者討論)。
-
 分岐ルール（合成プロンプトテンプレートで適用）:
-- `conflict_present = true`: 両軸が存在 → アンチパターン対シグネチャの緊張をフレーミング → verdict + 解決
-- `conflict_present = false`、一方がnull: 支配的な特性のポートレート、存在しない側を「未観測」として表示
-- `conflict_present = false`、両方ともnull: サポーティング5軸のみでポートレート、葛藤フレーミングなし
+- `conflict_present = true`: 両軸が存在 → 二つの独立したペルソナ (アンチパターンとシグネチャ) + 審判者を生成。3つのフィールド **必須**。
+- `conflict_present = false`、一方がnull: 不在のペルソナをnullに設定。`judge_system_prompt`はnull。
+- `conflict_present = false`、両方ともnull: すべてのペルソナフィールドはnull。
 
-制約: `system_prompt` ≤ 1500トークン。`character_oneliner` ≤ 20語。
+制約: 各`system_prompt` ≤ 1000トークン。`judge_system_prompt` ≤ 500トークン。`name` ≤ 12字。`oneliner` ≤ 25語。
 
 (c) 結果を保存: JSONを`{PWD}/.honne/cache/persona-synthesis.json`に`Write`ツールで保存します。JSONのパースに失敗するか応答が空の場合、保存をスキップし、生テキストと警告を出力します。
 
-## ステップ5: レンダリングと活性化
+## ステップ5: ペルソナレンダリング
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out .honne/persona-prompt.md
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render personas --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out-dir .honne/personas
 ```
 
 ゼロ以外のexit → 生の合成フィールドを出力し、ファイルレンダリング失敗の警告を表示します。
 
-ユーザーへ出力します:
+ユーザーへ出力 — ステップ4(c)で保存した合成JSONの状態に応じてケースを選択します。
 
-**キャラクター**: `character_oneliner`
+**ケースA — `conflict_present=true`** (二つのペルソナ + 審判者):
 
-**判定**: `verdict`
+> ふたつのペルソナが生成されました:
+> - `.honne/personas/antipattern.md` — {persona_antipattern.name}
+> - `.honne/personas/signature.md` — {persona_signature.name}
+> - `.honne/personas/judge.md` — 審判者
+>
+> ライブ討論を行うには `/honne:crush <テーマ>` を実行してください。
 
-**内なる衝突** (`conflict_present = true` の場合のみ):
-- **antipattern 側**: `debate.antipattern_voice`
-- **signature 側**: `debate.signature_voice`
-- **判決**: `debate.resolution`
+**ケースB — `conflict_present=false`、一方のペルソナのみ non-null**:
 
-**ペルソナシステムプロンプト**:
+> ペルソナが1つだけ生成されました (反対軸が検出されませんでした):
+> - `.honne/personas/{slot}.md` — {persona.name}
+>
+> `/honne:crush` ディベートには両軸が必要です。さらにセッションを収集し `/honne:whoami` を再実行してください。
 
-```
-[system_prompt]
-```
+`{slot}`は non-null ペルソナに応じて `antipattern` または `signature`。
 
-ユーザーへ通知します: "このペルソナは現在のセッションでアクティブです。システムプロンプト + アクティベーション指示は `.honne/persona-prompt.md` に保存されました — 将来のセッションや他の LLM で復元するには貼り付けてください。"
+**ケースC — `conflict_present=false`、両方とも null**:
 
-その後、出力の最後の行として、アクティベーション指示を自己に適用し次のように宣言します:
+> ペルソナは生成されませんでした (両軸とも検出されず)。セッションを追加収集し `/honne:whoami` を再実行してください。
 
-> **このメッセージ以降、「ペルソナ解除」または "reset persona" と言われるまで、上記の人物として応答します。**
-
-**重要**: CLAUDE.md には書き込まないでください。ペルソナの活性化はセッション内でのみ — (1) `.honne/persona-prompt.md` にレンダリングされた activation_directive セクション (コンテキストに露出) + (2) 上の最終自己宣言で達成されます。このスキルが終了した後、同じセッションの以降のターンではペルソナを体現してください。
+**重要**: このスキルはファイルを生成するだけです。ペルソナが実行中・適用中・使用中と主張しないでください。ペルソナは独立した成果物です — ユーザーがライブディベートを望むときに `/honne:crush` を呼び出します。

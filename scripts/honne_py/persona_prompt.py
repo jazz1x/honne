@@ -68,30 +68,30 @@ def build_conflict_payload(persona_path: Union[Path, str], locale: str) -> dict:
     return payload
 
 
-def render_persona_prompt(
+def render_personas(
     synthesis_path: Union[Path, str],
     persona_path: Union[Path, str],
     locale: str,
-    out_path: Union[Path, str],
+    out_dir: Union[Path, str],
 ) -> int:
-    """Render .honne/persona-prompt.md from synthesis + persona data.
-
-    Reads persona-synthesis.json + persona.json.
-    Applies persona_prompt.<locale>.md template.
-    Writes to out_path.
+    """Render .honne/personas/{antipattern,signature,judge}.md from synthesis.
 
     Exit codes:
       0: success
-      2: template error
-      66: missing file
+      2: template error (missing locale template)
+      66: missing/malformed synthesis or persona.json
     """
     VALID_LOCALES = {"ko", "en", "jp"}
 
+    if locale not in VALID_LOCALES:
+        print(f"error: invalid locale '{locale}'. valid: ko, en, jp", file=sys.stderr)
+        return 2
+
     synthesis_path = Path(synthesis_path)
     persona_path = Path(persona_path)
-    out_path = Path(out_path)
+    out_dir = Path(out_dir)
 
-    # Load synthesis
+    # 1. Load + validate synthesis JSON
     if not synthesis_path.exists():
         print(f"error: synthesis file not found: {synthesis_path}", file=sys.stderr)
         return 66
@@ -103,24 +103,34 @@ def render_persona_prompt(
         print(f"error: failed to parse {synthesis_path}: {e}", file=sys.stderr)
         return 66
 
-    required_keys = {"verdict", "character_oneliner", "system_prompt", "conflict_present"}
-    missing = required_keys - synthesis.keys()
-    if missing:
-        print(f"error: synthesis missing required keys: {sorted(missing)}", file=sys.stderr)
+    # Validate synthesis schema
+    if "conflict_present" not in synthesis:
+        print("error: synthesis missing 'conflict_present' key", file=sys.stderr)
         return 66
 
-    if synthesis.get("conflict_present"):
-        debate = synthesis.get("debate")
-        if not isinstance(debate, dict):
-            print("error: conflict_present=true but debate field missing or invalid", file=sys.stderr)
-            return 66
-        debate_required = {"antipattern_voice", "signature_voice", "resolution"}
-        debate_missing = debate_required - debate.keys()
-        if debate_missing:
-            print(f"error: debate missing required keys: {sorted(debate_missing)}", file=sys.stderr)
+    conflict_present = synthesis["conflict_present"]
+
+    if conflict_present:
+        # All three required when conflict is present
+        for required_key in ("persona_antipattern", "persona_signature", "judge_system_prompt"):
+            if required_key not in synthesis or synthesis[required_key] is None:
+                print(f"error: synthesis missing or null '{required_key}' (required when conflict_present=true)", file=sys.stderr)
+                return 66
+            if required_key != "judge_system_prompt":
+                persona_block = synthesis[required_key]
+                for block_key in ("name", "oneliner", "system_prompt"):
+                    if block_key not in persona_block:
+                        print(f"error: {required_key} missing '{block_key}'", file=sys.stderr)
+                        return 66
+    else:
+        # At most one of antipattern/signature when conflict absent
+        antipattern_count = 1 if synthesis.get("persona_antipattern") is not None else 0
+        signature_count = 1 if synthesis.get("persona_signature") is not None else 0
+        if antipattern_count + signature_count > 1:
+            print("error: conflict_present=false but multiple personas present", file=sys.stderr)
             return 66
 
-    # Load persona
+    # 2. Load persona.json
     if not persona_path.exists():
         print(f"error: persona file not found: {persona_path}", file=sys.stderr)
         return 66
@@ -132,97 +142,44 @@ def render_persona_prompt(
         print(f"error: failed to parse {persona_path}: {e}", file=sys.stderr)
         return 66
 
-    # Load template
-    tpl = _load_persona_prompt_template(locale)
-    if not tpl:
-        print(f"error: template missing for locale {locale}", file=sys.stderr)
+    # 3. Load template
+    template_path = Path(__file__).parent.parent.parent / "skills" / "persona" / "templates" / f"persona_render.{locale}.md"
+    if not template_path.exists():
+        print(f"error: template not found: {template_path}", file=sys.stderr)
         return 2
 
-    # Extract data
-    character_oneliner = synthesis.get("character_oneliner", "")
-    verdict = synthesis.get("verdict", "")
-    system_prompt = synthesis.get("system_prompt", "")
-
-    axes = persona.get("axes", {})
-    signature_claim = ""
-    antipattern_claim = ""
-
-    if axes.get("signature") is not None:
-        signature_claim = axes["signature"].get("claim", "")
-    if axes.get("antipattern") is not None:
-        antipattern_claim = axes["antipattern"].get("claim", "")
-
-    # Render from template
-    output = tpl["header"]
-    output = output.replace("{character_oneliner}", character_oneliner)
-
-    # Who you are section
-    output += "\n\n" + tpl["who_you_are"]
-    output = output.replace("{verdict}", verdict)
-
-    # Behavioral signature section (only if present)
-    if signature_claim:
-        output += "\n\n" + tpl["behavioral_signature"]
-        output = output.replace("{signature_claim}", signature_claim)
-
-    # Watch out for section (only if present)
-    if antipattern_claim:
-        output += "\n\n" + tpl["watch_out_for"]
-        output = output.replace("{antipattern_claim}", antipattern_claim)
-
-    # Debate section — validation at the top guarantees the dict + 3 required keys
-    # exist whenever conflict_present is true.
-    if synthesis.get("conflict_present"):
-        debate = synthesis["debate"]
-        output += "\n\n" + tpl["debate"]
-        output = output.replace("{debate_antipattern_voice}", debate["antipattern_voice"])
-        output = output.replace("{debate_signature_voice}", debate["signature_voice"])
-        output = output.replace("{debate_resolution}", debate["resolution"])
-
-    # System prompt section
-    output += "\n\n" + tpl["system_prompt_section"]
-    output = output.replace("{system_prompt}", system_prompt)
-
-    # Activation directive — template load enforces this section's presence.
-    output += "\n\n" + tpl["activation_directive"]
-
-    # Write output
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(output)
-
-    return 0
-
-
-def _load_persona_prompt_template(locale: str) -> Optional[Dict[str, str]]:
-    """Parse persona_prompt.<locale>.md for required sections."""
-    root = Path(__file__).parent.parent.parent / f"skills/persona/templates/persona_prompt.{locale}.md"
     try:
-        txt = root.read_text(encoding="utf-8")
-    except (OSError, FileNotFoundError):
-        return None
+        with open(template_path, "r", encoding="utf-8") as f:
+            template = f.read()
+    except OSError as e:
+        print(f"error: failed to read template: {e}", file=sys.stderr)
+        return 2
 
-    # Split by ^## section_name
-    sections = {}
-    current_section = None
-    current_content = []
-    for line in txt.splitlines(keepends=True):
-        m = re.match(r"^## ([a-z_]+)$", line.rstrip())
-        if m:
-            if current_section:
-                sections[current_section] = "".join(current_content).strip("\n")
-            current_section = m.group(1)
-            current_content = []
-        elif current_section:
-            current_content.append(line)
-    if current_section:
-        sections[current_section] = "".join(current_content).strip("\n")
+    # 4. Create out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Verify required sections (debate + activation_directive added in 0.0.2)
-    required = {
-        "header", "who_you_are", "behavioral_signature",
-        "watch_out_for", "debate", "system_prompt_section", "activation_directive",
-    }
-    if not required.issubset(sections.keys()):
-        return None
-    return sections
+    # 5. Render persona files
+    if synthesis.get("persona_antipattern") is not None:
+        antipattern = synthesis["persona_antipattern"]
+        rendered = template.format(
+            name=antipattern["name"],
+            oneliner=antipattern["oneliner"],
+            system_prompt=antipattern["system_prompt"],
+        )
+        (out_dir / "antipattern.md").write_text(rendered, encoding="utf-8")
+
+    if synthesis.get("persona_signature") is not None:
+        signature = synthesis["persona_signature"]
+        rendered = template.format(
+            name=signature["name"],
+            oneliner=signature["oneliner"],
+            system_prompt=signature["system_prompt"],
+        )
+        (out_dir / "signature.md").write_text(rendered, encoding="utf-8")
+
+    # 6. Write judge as-is (no template wrap)
+    if synthesis.get("judge_system_prompt") is not None:
+        (out_dir / "judge.md").write_text(synthesis["judge_system_prompt"], encoding="utf-8")
+
+    # 7. Return success
+    return 0

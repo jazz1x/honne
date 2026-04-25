@@ -129,12 +129,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     report_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
     report_p.add_argument("--out", required=True)
 
-    persona_prompt_p = render_sub.add_parser("persona-prompt")
-    persona_prompt_p.add_argument("--synthesis", required=False)
-    persona_prompt_p.add_argument("--persona", required=True)
-    persona_prompt_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
-    persona_prompt_p.add_argument("--out", required=False)
-    persona_prompt_p.add_argument("--check-only", action="store_true", default=False)
+    personas_p = render_sub.add_parser("personas")
+    personas_p.add_argument("--synthesis", required=True)
+    personas_p.add_argument("--persona", required=True)
+    personas_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
+    personas_p.add_argument("--out-dir", required=True)
+
+    # persona check
+    persona_parser = subparsers.add_parser("persona", help="persona utilities")
+    persona_sub = persona_parser.add_subparsers(dest="subcommand", parser_class=_Parser)
+    persona_check = persona_sub.add_parser("check")
+    persona_check.add_argument("--persona", required=True)
 
     # doctor
     subparsers.add_parser("doctor", help="environment health check")
@@ -270,24 +275,18 @@ def main(argv: Optional[List[str]] = None) -> int:
             out_path=args.out,
         )
 
-    elif args.command == "render" and args.subcommand == "persona-prompt":
-        from .persona_prompt import render_persona_prompt
-        if args.check_only:
-            # Just verify persona.json exists
-            from pathlib import Path
-            p = Path(args.persona)
-            if not p.exists():
-                return 66
-            return 0
-        if not args.synthesis or not args.out:
-            print("error: --synthesis and --out required (unless --check-only)", file=sys.stderr)
-            return 2
-        return render_persona_prompt(
+    elif args.command == "render" and args.subcommand == "personas":
+        from .persona_prompt import render_personas
+        return render_personas(
             synthesis_path=args.synthesis,
             persona_path=args.persona,
             locale=args.locale,
-            out_path=args.out,
+            out_dir=args.out_dir,
         )
+
+    elif args.command == "persona" and args.subcommand == "check":
+        from pathlib import Path
+        return 0 if Path(args.persona).exists() else 66
 
     elif args.command == "doctor":
         from .doctor import main as doctor_main

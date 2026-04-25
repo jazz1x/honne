@@ -7,61 +7,62 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.0.2] — 2026-04-24
 
-Persona system prompt activation: conflict synthesis between antipattern and signature axes.
+Split-persona pivot: two independent personas generated separately, then debated live via new `/honne:crush` skill.
 
 ### Added
 
-#### persona — In-session persona activation from conflict synthesis
+#### persona — Split-persona generation (no activation)
 
 - **Conflict payload builder** (`persona_prompt.build_conflict_payload`): extracts antipattern + signature axes from persona.json with supporting context; returns `conflict_present` flag
-- **Three-voice debate synthesis** (SKILL step 4): `persona_synthesis_prompt.{locale}.md` templates stage antipattern vs. signature as prosecutor / defender / judge. Synthesis JSON now requires `debate: {antipattern_voice, signature_voice, resolution}` when `conflict_present=true`.
-- **Render with debate + activation directive** (`honne render persona-prompt`): `.honne/persona-prompt.md` includes the inner clash transcript + an explicit "stay in character" directive for the LLM reading the file
-- **Session-scoped activation** (SKILL step 5): outputs character_oneliner + verdict + debate summary + system_prompt, then the skill self-applies the activation directive as its final statement. CLAUDE.md injection remains prohibited — activation works via (a) the rendered directive visible in context, (b) the final self-statement.
+- **Split-persona synthesis** (SKILL step 4): `persona_synthesis_prompt.{locale}.md` templates generate two separate personas + judge from conflict payload. Synthesis JSON schema: `{conflict_present, persona_antipattern, persona_signature, judge_system_prompt}` (one or both personas can be null).
+- **Render personas** (`honne render personas`): writes three `.md` files to `.honne/personas/` — `antipattern.md`, `signature.md`, `judge.md`. Each file contains system prompt under `# ` name header.
+- **No activation** (SKILL step 5): outputs are portable artifacts only. Persona skill no longer claims session activation. User redirected to `/honne:crush` for live debate.
+
+#### crush — Live persona debate skill
+
+- **`/honne:crush <topic>`**: 6-step flow — validate personas exist → load all 3 files → stage 5-turn debate (antipattern attack → signature rebuttal → antipattern counter → signature closing → judge verdict) → output transcript
+- **No file writes**: transcript is ephemeral, displayed only in current session
+- **Role switching**: each turn applies the corresponding persona's system prompt mentally, enforcing extreme viewpoints without compromise
+- **Extensible for new topics**: users can run `/honne:crush` multiple times on different topics without regenerating personas
 
 #### Templates (3 locales: ko / en / jp)
 
-- `persona_synthesis_prompt.{locale}.md` — LLM synthesis template enforcing three-voice debate format (antipattern prosecutor / signature defender / judge resolution)
-- `persona_prompt.{locale}.md` — report template for `.honne/persona-prompt.md` (character_oneliner, verdict, signature, antipattern, **debate**, system_prompt, **activation_directive** sections)
+- `persona_synthesis_prompt.{locale}.md` — LLM synthesis template for split-persona generation (antipattern ≤1000 tokens, signature ≤1000 tokens, judge ≤500 tokens)
+- `persona_render.{locale}.md` — minimal template for persona file output: `# {name}`, `> {oneliner}`, `---`, `{system_prompt}`
 
 #### Skills
 
-- `persona` (ko / en / jp): 5-step flow — locale HITL → persona.json validation → conflict payload → LLM synthesis → render + activation
+- `persona` (ko / en / jp): 5-step flow — locale HITL → persona.json validation → conflict payload → LLM synthesis → render personas (generation-only, no activation)
+- `crush` (ko / en / jp): 6-step debate orchestrator — topic input → persona validation → live 5-turn transcript with judge
 
 #### CLI
 
-- `honne render persona-prompt` — render persona-prompt.md from synthesis.json + persona.json with locale selection
-
-#### setup — One-time allowedTools permission registration
-
-- `setup` skill (ko / en / jp): 2-step flow — output `allowedTools` fragment → inspect current `~/.claude/settings.json` state. Read-only; never mutates user settings.
-
-#### SKILL hardening (whoami execution fixes from 0.0.1 e2e log)
-
-- **File-based quotes passing** (`record claim --quotes-file <path>`): eliminates shell arg injection failure for Korean / special-character quote sets. `--quotes-json` preserved for backward compat.
-- **Intermediate file contract** (SKILL step 4): each axis output written to `.honne/cache/axis-{name}.json`; `/tmp` writes prohibited as testable HARD RULE.
-- **Absolute path resolution** (SKILL step 5): narrative Write path resolved via `python3 os.getcwd()` before Write tool invocation. Eliminates `{PWD}` placeholder ambiguity that caused writes to `~/.claude/projects/*/`.
-- **Synthesis JSON validation** (`render persona-prompt`): required keys `{verdict, character_oneliner, system_prompt, conflict_present}` checked fail-fast (exit 66) on missing key.
-- **`build_conflict_payload` contract**: `conflict_present: bool` added to return dict (True only when both antipattern + signature non-null).
+- `honne render personas` — render `.honne/personas/` directory from synthesis.json + persona.json
+- `honne persona check` — existence check for `.honne/persona.json`
 
 #### Tests
 
-- `unit_persona_prompt_test.py`: build_conflict_payload and render_persona_prompt tests (both axes, one/both absent, both null, missing files, invalid locale)
-- `unit_persona_skill_test.py`: SKILL contract tests (all 3 locale files, no heredocs, required keys, templates, plugin.json registration, whoami /tmp prohibition)
-- `tests/fixtures/persona/persona_no_axes.json`: fixture for both-axes-null (portrait mode) branch
-- `unit_skill_contract_test.py`: `test_skill_step4_has_quotes_file_arg` updated to reflect 0.0.2 file-based passing contract
+- `unit_persona_prompt_test.py`: rewritten for `render_personas` (both personas, one absent, both null, missing synthesis/persona, missing template, invalid locale)
+- `unit_crush_skill_test.py`: contract tests for crush SKILL (file existence, step structure, persona file references, no file writes)
+- `tests/fixtures/persona/synthesis_*.json`: new fixtures for split-persona schema (full, no antipattern, no axes)
+- `unit_skill_contract_test.py`: updated assertions for new Step 4 schema
 
 #### Docs
 
-- `docs/e2e-persona.md`: manual smoke checklist for post-implementation verification
+- `docs/e2e-persona.md`: rewritten checklist for `/honne:persona` generation flow + `/honne:crush` debate flow (no activation checks)
 
 ### Changed
 
-- `.claude-plugin/plugin.json`: version bumped to 0.0.2; persona + setup skills registered
-- `scripts/honne_py/record.py`: `quotes_file` parameter added; accepts axis JSON (`{quotes: [...]}`) or flat array
-- `scripts/honne_py/cli.py`: `--quotes-file` wired into `record claim` subparser
-- `scripts/honne_py/purge.py`: `--keep-assets` loop handles `cache/` deletion (including `axis-*.json`) via `rmtree`
-- `skills/whoami/SKILL.md` (+ ko / jp): Step 4 rewritten for file-based quotes; Step 5 abs-path resolve
-- Documentation: README.md / README.ko.md / README.jp.md updated with /honne:persona skill table entry
+- **persona schema breaking change**: old `{verdict, character_oneliner, debate, ...}` → new `{conflict_present, persona_antipattern, persona_signature, judge_system_prompt}`
+- `scripts/honne_py/persona_prompt.py`: deleted `render_persona_prompt` + `_load_persona_prompt_template`; kept `build_conflict_payload`, added `render_personas`
+- `scripts/honne_py/cli.py`: removed `render persona-prompt` subparser; added `render personas` + `persona check` subparsers
+- `skills/persona/SKILL.md` (+ ko / jp): Step 4-5 rewritten for new schema; Step 2 now uses `persona check`; Step 5 output no longer claims activation
+- Documentation: README.md / README.ko.md / README.jp.md updated for version 0.0.2, persona redesign, and new crush skill
+
+### Removed
+
+- `persona_prompt.{locale}.md` templates (replaced by `persona_render.{locale}.md`)
+- Activation directive output from `/honne:persona` skill (no longer in-session embodiment claim)
 
 ---
 

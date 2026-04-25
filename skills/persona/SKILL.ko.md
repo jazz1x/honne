@@ -25,7 +25,7 @@ description: >
 persona.json 존재 여부를 확인합니다:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --check-only --persona .honne/persona.json --locale "$LOCALE"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" persona check --persona .honne/persona.json
 ```
 
 - Exit 66 → 사용자에게 알림: "`.honne/persona.json`이 없습니다. 먼저 `/honne:whoami`를 실행하여 페르소나를 생성하세요." 중지.
@@ -77,56 +77,60 @@ Read "${CLAUDE_PLUGIN_ROOT}/skills/persona/templates/persona_synthesis_prompt.${
 
 ```json
 {
-  "verdict": "...",
-  "character_oneliner": "...",
-  "system_prompt": "...",
   "conflict_present": true,
-  "debate": {
-    "antipattern_voice": "...",
-    "signature_voice": "...",
-    "resolution": "..."
-  }
+  "persona_antipattern": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "persona_signature": {
+    "name": "...",
+    "oneliner": "...",
+    "system_prompt": "..."
+  },
+  "judge_system_prompt": "..."
 }
 ```
 
 분기 규칙 (합성 프롬프트 템플릿에서 적용):
-- `conflict_present = true`: 양쪽 축 모두 존재 → antipattern vs. signature를 3자 토론 (검사 / 변호 / 판결)으로 무대화. `debate` 필드 **필수**.
-- `conflict_present = false`, 한쪽 null: 지배적 특성 포트레이트, 없는 쪽을 "아직 관찰되지 않음"으로 표시. `debate`는 null 또는 생략.
-- `conflict_present = false`, 양쪽 모두 null: 지원 5개 축만으로 포트레이트. `debate`는 null 또는 생략.
+- `conflict_present = true`: 양쪽 축 모두 존재 → 두 개의 분리된 페르소나 (antipattern과 signature) + 심판자를 생성. 세 필드 모두 **필수**.
+- `conflict_present = false`, 한쪽 null: 없는 페르소나를 null로 설정. `judge_system_prompt`는 null.
+- `conflict_present = false`, 양쪽 모두 null: 모든 페르소나 필드는 null.
 
-제약: `system_prompt` ≤ 1500 tokens. `character_oneliner` ≤ 20단어. 각 `debate` voice는 2~3문장, 평서문만.
+제약: 각 `system_prompt` ≤ 1000 tokens. `judge_system_prompt` ≤ 500 tokens. `name` ≤ 12자. `oneliner` ≤ 25단어.
 
 (c) 결과 저장: JSON을 `{PWD}/.honne/cache/persona-synthesis.json`에 `Write` 도구로 저장합니다. JSON 파싱 실패 또는 빈 응답이면 저장 건너뛰고 원시 텍스트와 경고를 출력합니다.
 
-## 5단계: 렌더링 및 활성화
+## 5단계: 페르소나 렌더링
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona-prompt --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out .honne/persona-prompt.md
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render personas --persona .honne/persona.json --synthesis .honne/cache/persona-synthesis.json --locale "$LOCALE" --out-dir .honne/personas
 ```
 
 0이 아닌 exit → 원시 합성 필드를 출력하고 파일 렌더링 실패 경고를 표시합니다.
 
-사용자에게 출력합니다:
+사용자에게 출력 — 4단계(c)에서 저장한 합성 JSON 상태에 따라 케이스를 선택합니다.
 
-**캐릭터**: `character_oneliner`
+**케이스 A — `conflict_present=true`** (두 인격 + 심판자):
 
-**판정**: `verdict`
+> 두 인격이 생성되었습니다:
+> - `.honne/personas/antipattern.md` — {persona_antipattern.name}
+> - `.honne/personas/signature.md` — {persona_signature.name}
+> - `.honne/personas/judge.md` — 심판자
+>
+> 두 인격을 붙이려면 `/honne:crush <주제>`를 실행하세요.
 
-**내면의 충돌** (`conflict_present = true`일 때만):
-- **antipattern 측**: `debate.antipattern_voice`
-- **signature 측**: `debate.signature_voice`
-- **판결**: `debate.resolution`
+**케이스 B — `conflict_present=false`, 한쪽 인격만 non-null**:
 
-**페르소나 시스템 프롬프트**:
+> 하나의 인격만 생성되었습니다 (반대 축이 감지되지 않음):
+> - `.honne/personas/{slot}.md` — {persona.name}
+>
+> `/honne:crush` 토론은 두 축이 모두 필요합니다. 더 많은 세션을 수집한 뒤 `/honne:whoami`를 재실행하세요.
 
-```
-[system_prompt]
-```
+`{slot}`은 non-null 인격에 따라 `antipattern` 또는 `signature`.
 
-사용자에게 알립니다: "이 페르소나는 현재 세션에서 활성화되어 있습니다. 시스템 프롬프트 + 활성화 지시는 `.honne/persona-prompt.md`에 저장되었습니다 — 향후 세션이나 다른 LLM에서 이 페르소나를 복원하려면 붙여넣기 하세요."
+**케이스 C — `conflict_present=false`, 양쪽 모두 null**:
 
-그 후 출력의 마지막 줄로, 활성화 지시를 자기 자신에게 적용하여 다음을 선언합니다:
+> 인격이 생성되지 않았습니다 (두 축 모두 감지되지 않음). 세션을 더 수집한 뒤 `/honne:whoami`를 재실행하세요.
 
-> **이 메시지부터 "페르소나 해제" 또는 "reset persona"라고 말씀하시기 전까지, 저는 위 인물로 응답합니다.**
-
-**중요**: CLAUDE.md에 쓰지 마십시오. 페르소나 활성화는 세션 내에서만 — (1) `.honne/persona-prompt.md`에 렌더링된 activation_directive 섹션 (컨텍스트에 노출) + (2) 위의 최종 자기 선언으로 달성됩니다. 이 스킬이 끝난 후, 같은 세션의 이후 턴은 페르소나를 체현해야 합니다.
+**중요**: 이 스킬은 파일만 생성합니다. 페르소나가 실행 중·적용 중·사용 중이라고 주장하지 마십시오. 페르소나는 독립적인 산물입니다 — 사용자가 실시간 토론을 원할 때 `/honne:crush`를 호출합니다.
