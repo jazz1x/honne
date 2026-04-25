@@ -1,0 +1,51 @@
+{
+  "axes": {
+    "antipattern": {
+      "claim": "비효율 패턴: overspec(251), repeat_same_request(82)",
+      "explanation": "과도 사양과 동일 요청 반복이 관찰됩니다.",
+      "evidence_strength": 0.67,
+      "quotes": []
+    },
+    "signature": {
+      "claim": "시그니처 패턴: targeted_request(573), decisive_close(225)",
+      "explanation": "대상 명확한 요청과 결정적 종료 패턴이 특징입니다.",
+      "evidence_strength": 0.67,
+      "quotes": []
+    },
+    "lexicon": {
+      "claim": "자주 쓰는 표현: prd(188), run(182), read(173)",
+      "explanation": "업무 지시와 코드 읽기 관련 용어가 중심입니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "reaction": {
+      "claim": "반응 패턴: scope_cut(782), deepen(531)",
+      "explanation": "범위 축소 반응이 높은 빈도로 나타납니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "workflow": {
+      "claim": "작업 순서: question_driven → multi_file_scope",
+      "explanation": "질문 기반 접근이 먼저 나타나고 다중 파일 범위로 진행됩니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "obsession": {
+      "claim": "반복 주제: task_description(6), run_loop(5)",
+      "explanation": "작업 기술 설명과 반복 루프 실행이 주요 관심사입니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "ritual": {
+      "claim": "세션 의식: canonical_inputs(394), feasibility_audit(152)",
+      "explanation": "정형화된 입력 패턴과 검증 기반 지시가 수행됩니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    }
+  },
+  "generated_at": "2026-04-24T02:26:33Z",
+  "locale": "ko",
+  "oneliner": "당신은 범위수렴형 유형입니다.",
+  "run_id": "5bb9bb65361a46589d3ebd95833aa2db",
+  "scope": "global"
+}

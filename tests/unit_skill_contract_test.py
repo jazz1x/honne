@@ -25,11 +25,11 @@ class TestSkillContract:
             step4 = self._read_skill_step(locale, 4)
             assert "AskUserQuestion" not in step4, f"Step 4 ({locale}) has AskUserQuestion"
 
-    def test_skill_step4_has_quotes_json_arg(self):
-        """Step 4: record claim includes --quotes-json argument."""
+    def test_skill_step4_has_quotes_file_arg(self):
+        """Step 4: record claim includes --quotes-file argument (0.0.2 file-based passing)."""
         for locale in ["en", "ko", "jp"]:
             step4 = self._read_skill_step(locale, 4)
-            assert "--quotes-json" in step4, f"Step 4 ({locale}) missing --quotes-json"
+            assert "--quotes-file" in step4, f"Step 4 ({locale}) missing --quotes-file"
 
     def test_skill_step5_synthesis_block_present(self):
         """Step 5: LLM synthesis narrative.json generation present."""

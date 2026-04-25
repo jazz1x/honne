@@ -90,6 +90,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     claim_parser.add_argument("--support-count", type=int, required=False)
     claim_parser.add_argument("--prior-id", required=False)
     claim_parser.add_argument("--quotes-json", required=False)
+    claim_parser.add_argument("--quotes-file", required=False)
     claim_parser.add_argument("--run-id", required=False)
 
     # purge
@@ -127,6 +128,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     report_p.add_argument("--persona", required=True)
     report_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
     report_p.add_argument("--out", required=True)
+
+    personas_p = render_sub.add_parser("personas")
+    personas_p.add_argument("--synthesis", required=True)
+    personas_p.add_argument("--persona", required=True)
+    personas_p.add_argument("--locale", required=True, choices=["ko", "en", "jp"])
+    personas_p.add_argument("--out-dir", required=True)
+
+    # persona check
+    persona_parser = subparsers.add_parser("persona", help="persona utilities")
+    persona_sub = persona_parser.add_subparsers(dest="subcommand", parser_class=_Parser)
+    persona_check = persona_sub.add_parser("check")
+    persona_check.add_argument("--persona", required=True)
 
     # doctor
     subparsers.add_parser("doctor", help="environment health check")
@@ -211,6 +224,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             prior_id=args.prior_id,
             quotes_json=args.quotes_json,
             run_id=args.run_id,
+            quotes_file=args.quotes_file,
         )
 
     elif args.command == "purge":
@@ -260,6 +274,19 @@ def main(argv: Optional[List[str]] = None) -> int:
             locale=args.locale,
             out_path=args.out,
         )
+
+    elif args.command == "render" and args.subcommand == "personas":
+        from .persona_prompt import render_personas
+        return render_personas(
+            synthesis_path=args.synthesis,
+            persona_path=args.persona,
+            locale=args.locale,
+            out_dir=args.out_dir,
+        )
+
+    elif args.command == "persona" and args.subcommand == "check":
+        from pathlib import Path
+        return 0 if Path(args.persona).exists() else 66
 
     elif args.command == "doctor":
         from .doctor import main as doctor_main

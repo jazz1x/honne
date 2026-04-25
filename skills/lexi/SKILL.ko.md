@@ -20,4 +20,9 @@ description: >
 6. 주장/거절 자산으로 기록
 7. 과거 거절을 확인하여 재제안 방지
 
+**진행 모니터링** — Monitor until-loop 사용 (`sleep N && cat` 금지):
+```bash
+# ✓ Monitor: until [ -f ".honne/cache/lexicon.json" ]
+```
+
 stdout + .honne/assets/claim.jsonl에 저장된 보고서

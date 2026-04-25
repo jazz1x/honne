@@ -20,11 +20,18 @@ description: >
 ## ステップ3: 主張 + 進化をロード
 
 ```bash
-HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --tag "<axis>" --scope "$SCOPE" --type claim --out stdout
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+```
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --type evolution --scope "$SCOPE" --out stdout
+```
+
+**非同期待機パターン** — Monitor until-loop使用、`sleep N && cat`禁止:
+```bash
+# ✓ Monitor: until [ -f ".honne/assets/claim.jsonl" ]
 ```
 
 ## ステップ4: 時間バケットグループ化

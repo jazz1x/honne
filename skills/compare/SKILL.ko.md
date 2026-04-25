@@ -20,11 +20,18 @@ description: >
 ## 3단계: 주장 + 진화 로드
 
 ```bash
-HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --tag "<axis>" --scope "$SCOPE" --type claim --out stdout
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+```
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --type evolution --scope "$SCOPE" --out stdout
+```
+
+**비동기 대기 패턴** — Monitor until-loop 사용, `sleep N && cat` 금지:
+```bash
+# ✓ Monitor: until [ -f ".honne/assets/claim.jsonl" ]
 ```
 
 ## 4단계: 시간 버킷 그룹화

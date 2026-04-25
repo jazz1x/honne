@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-24T00:00:00Z",
+  "run_id": "run_no_axes",
+  "axes": {
+    "lexicon": {"claim": "어휘 패턴: debug(12)", "explanation": "...", "evidence_strength": 0.4},
+    "reaction": {"claim": "반응 패턴: positive(8)", "explanation": "...", "evidence_strength": 0.3},
+    "workflow": {"claim": "워크플로우 패턴: iterative(5)", "explanation": "...", "evidence_strength": 0.3},
+    "obsession": {"claim": "집착 패턴: correctness(7)", "explanation": "...", "evidence_strength": 0.35},
+    "ritual": {"claim": "의례 패턴: context_reset(4)", "explanation": "...", "evidence_strength": 0.25},
+    "antipattern": null,
+    "signature": null
+  }
+}

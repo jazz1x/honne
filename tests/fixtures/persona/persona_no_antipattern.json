@@ -1,0 +1,46 @@
+{
+  "axes": {
+    "antipattern": null,
+    "signature": {
+      "claim": "시그니처 패턴: targeted_request(573), decisive_close(225)",
+      "explanation": "대상 명확한 요청과 결정적 종료 패턴이 특징입니다.",
+      "evidence_strength": 0.67,
+      "quotes": []
+    },
+    "lexicon": {
+      "claim": "자주 쓰는 표현: prd(188)",
+      "explanation": "업무 용어가 중심입니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "reaction": {
+      "claim": "반응 패턴: scope_cut(782)",
+      "explanation": "범위 축소 반응이 높습니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "workflow": {
+      "claim": "작업 순서: question_driven",
+      "explanation": "질문 기반 접근입니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "obsession": {
+      "claim": "반복 주제: task_description",
+      "explanation": "작업 기술이 주요 관심사입니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    },
+    "ritual": {
+      "claim": "세션 의식: canonical_inputs",
+      "explanation": "정형화된 입력 패턴이 수행됩니다.",
+      "evidence_strength": 1.0,
+      "quotes": []
+    }
+  },
+  "generated_at": "2026-04-24T02:26:33Z",
+  "locale": "ko",
+  "oneliner": "당신은 시그니처형입니다.",
+  "run_id": "5bb9bb65361a46589d3ebd95833aa2db",
+  "scope": "global"
+}

@@ -2,7 +2,7 @@
 
 > Claude Code プラグイン — LLM トランスクリプトからの自己観察
 
-![version](https://img.shields.io/badge/version-0.0.1-blue)
+![version](https://img.shields.io/badge/version-0.0.2-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -19,6 +19,9 @@
 | **whoami** | `/honne:whoami` | メインオーケストレーター。7 軸ペルソナ + 自律証拠収集 + LLM ナラティブ合成。 |
 | **lexi** | `/honne:lexi` | 語彙 (Lexicon) 軸のみ (高頻度語彙、コードスイッチング比率、擬音語・擬態語)。 |
 | **compare** | `/honne:compare` | 読み取り専用の振り返り。蓄積された資産を読み、経時的な変化を提示。transcript 再スキャン / LLM 再分析なし。 |
+| **persona** | `/honne:persona` | アンチパターン & シグネチャ軸から 2 つの独立したペルソナを生成。`.md` ファイルとして `/honne:crush` で使用するために保存。 |
+| **crush** | `/honne:crush` | 2 つのペルソナがトピックについてライブ討論。ペルソナファイルを読み、5 ターンのトランスクリプトと判決を生成。 |
+| **setup** | `/honne:setup` | 一回限りの `allowedTools` 登録。現在の状態を検出し、権限エントリを生成し、プロジェクト設定に自動適用オプション。 |
 
 各スキルは独立した軌道で動作し、**ファイルベースの共有成果物** (`.honne/cache/`, `.honne/persona.json`, `.honne/assets/*.jsonl`) でのみ接続されます。
 
@@ -71,7 +74,7 @@ Claude Code セッション内で実行:
 期待される出力:
 
 ```
-✓ Installed honne@0.0.1 — 3 skills registered (whoami, lexi, compare)
+✓ Installed honne@0.0.2 — 6 skills registered (whoami, lexi, compare, persona, crush, setup)
 ```
 
 スコープの選択:
@@ -93,6 +96,9 @@ Claude Code セッション内で実行:
 /honne:whoami
 /honne:lexi
 /honne:compare
+/honne:persona
+/honne:crush
+/honne:setup
 ```
 
 `SessionEnd` フックは自動登録 — 追加設定不要。

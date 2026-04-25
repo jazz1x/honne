@@ -1,6 +1,6 @@
 ---
 name: whoami
-version: 0.0.1
+version: 0.0.2
 description: >
   Orchestrate 6-axis self-observation from local LLM transcripts.
   Autonomous evidence gathering + LLM-synthesized narrative.
@@ -39,27 +39,29 @@ Before Step 4 records each axis, pipe the candidate through `bash "${CLAUDE_PLUG
 For each axis from `axis list`, run each command separately — do NOT bundle into a script file or use heredocs:
 
 ```bash
-AXIS_JSON=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
-  --locale "$LOCALE" --scan .honne/cache/scan.json)
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run "$axis" \
+  --locale "$LOCALE" --scan .honne/cache/scan.json > ".honne/cache/axis-${axis}.json"
 ```
 
 ```bash
-echo "$AXIS_JSON" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin).get('insufficient_evidence') else 1)"
+python3 -c "import json,sys; d=json.load(open('.honne/cache/axis-${axis}.json')); sys.exit(0 if d.get('insufficient_evidence') else 1)"
 ```
 If exit 0 → skip this axis (insufficient evidence), continue to next.
 
 ```bash
-CANDIDATE=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['candidate_claim'])")
-QUOTES_JSON=$(echo "$AXIS_JSON" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['quotes']))")
+python3 -c "import json; print(json.load(open('.honne/cache/axis-${axis}.json'))['candidate_claim'])"
 ```
+Capture stdout as `CANDIDATE`.
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --type claim --axis "$axis" --scope "$SCOPE" \
   --claim "$CANDIDATE" --run-id "$RUN_ID" \
-  --quotes-json "$QUOTES_JSON" \
+  --quotes-file ".honne/cache/axis-${axis}.json" \
   --out ".honne/assets/claims.jsonl"
 ```
+
+**HARD RULE**: Do NOT write any intermediate data to `/tmp`. If you feel compelled to write to `/tmp`, use `.honne/cache/` instead. Writing to `/tmp` is a SKILL.md contract violation — the test suite will catch it.
 
 **IMPORTANT**: Execute each `bash` block as a direct shell command. Do NOT write to `/tmp`, do NOT use shell heredocs (`<< 'EOF'`), do NOT bundle commands into a script file. Run inline commands only.
 
@@ -85,18 +87,28 @@ Do NOT use `python3 << 'PYEOF'` or any heredoc to build this payload. Assemble i
 
 (c) Synthesize: Apply synthesis_prompt system instructions to yourself + USER_PAYLOAD as user input. Produce STRICT JSON response.
 
-(d) Save result: `Write` the JSON response to `{PWD}/.honne/cache/narrative.json` (absolute path required). If JSON parse fails or response is empty, skip saving (narrative.json remains absent).
+(d) Resolve the absolute path first:
+```bash
+python3 -c "import os; print(os.path.join(os.getcwd(), '.honne/cache/narrative.json'))"
+```
+Capture stdout as `NARRATIVE_PATH`. Then: `Write` the JSON response to the resolved path. If JSON parse fails or response is empty, skip saving.
 
 ## Step 6: Render persona and report
 
 ```bash
-NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+date -u +%Y-%m-%dT%H:%M:%SZ
+```
+Capture stdout as `NOW`.
+
+```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render persona \
   --claims .honne/assets/claims.jsonl \
   --scope "$SCOPE" --locale "$LOCALE" --run-id "$RUN_ID" --now "$NOW" \
   --narrative .honne/cache/narrative.json \
   --out .honne/persona.json
+```
 
+```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render report \
   --persona .honne/persona.json --locale "$LOCALE" --out docs/honne.md
 ```

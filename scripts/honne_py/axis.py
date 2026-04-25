@@ -279,6 +279,7 @@ def run(name: str, locale: str, scan_path: Path,
         sys.stderr.write(f"locale must be one of {LOCALES}\n")
         return 2
     if not scan_path.exists():
+        sys.stderr.write(f"error: scan file not found: {scan_path}\n")
         return 66
 
     tmp = scan_path.parent / f".axis_{name}.json"

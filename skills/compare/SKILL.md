@@ -20,10 +20,12 @@ If .honne/assets/ absent or empty:
 ## Step 3: Load claims + evolutions
 
 ```bash
-HONNE_ROOT="${CLAUDE_PLUGIN_ROOT}"
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --tag "<axis>" --scope "$SCOPE" --type claim --out stdout
-bash "$HONNE_ROOT/scripts/query-assets.sh" \
+```
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
   --type evolution --scope "$SCOPE" --out stdout
 ```
 

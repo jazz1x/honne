@@ -20,4 +20,9 @@ description: >
 6. 主張/拒否資産として記録
 7. 過去の拒否をチェックして再提案を防止
 
+**進捗モニタリング** — Monitor until-loop使用 (`sleep N && cat`禁止):
+```bash
+# ✓ Monitor: until [ -f ".honne/cache/lexicon.json" ]
+```
+
 stdout + .honne/assets/claim.jsonlに保存されたレポート
