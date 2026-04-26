@@ -12,7 +12,11 @@ PATTERNS = [
     (re.compile(r'(sk-|pk_)[a-zA-Z0-9_-]{20,}'),                          '[REDACTED:api-key]'),
     (re.compile(r'AKIA[0-9A-Z]{16}'),                                     '[REDACTED:aws]'),
     (re.compile(r'gh[pso]_[a-zA-Z0-9]{36,}'),                             '[REDACTED:gh]'),
+    (re.compile(r'github_pat_[a-zA-Z0-9_]{20,}'),                       '[REDACTED:gh-pat]'),
+    (re.compile(r'xox[bpsa]-[A-Za-z0-9-]{10,}'),                        '[REDACTED:slack-token]'),
+    (re.compile(r'AIza[0-9A-Za-z_-]{35}'),                              '[REDACTED:gcp-api-key]'),
     (re.compile(r'ey[JK][A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'), '[REDACTED:jwt]'),
+    (re.compile(r'-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----'), '[REDACTED:private-key]'),
     # Webhooks
     (re.compile(r'https://hooks\.slack\.com/services/[A-Z0-9/]+'),        '[REDACTED:slack-webhook]'),
     (re.compile(r'https://discord(?:app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+'), '[REDACTED:discord-webhook]'),

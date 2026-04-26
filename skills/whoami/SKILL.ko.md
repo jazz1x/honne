@@ -118,8 +118,6 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" render report \
 
 다음 액션 제안을 사용자에게 출력합니다:
 
-**다음 액션 제안**
-- 이 형태로 나의 분신(페르소나) 구현해보기
-- 효율적인 토큰 사용을 위한 분석 가이드
-
-*(이 기능들이 곧 찾아옵니다.)*
+**다음 액션**
+- `/honne:persona` — 이 프로필에서 두 페르소나(antipattern × signature) 생성
+- `/honne:crush <주제>` — 두 페르소나 간 라이브 토론

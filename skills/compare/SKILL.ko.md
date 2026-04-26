@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.0.1
+version: 0.0.2
 description: >
   자산 전용 회고. 트랜스크립트 재스캔, LLM 재분석, HITL 없음.
   Triggers: "compare", "review past", "what changed", "self retrospective".

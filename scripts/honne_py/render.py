@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Dict, List, Any, Optional
+from typing import Union, Dict, Optional
 import json
 import sys
 import re
@@ -251,7 +251,7 @@ _EXPLANATION_LINE_RE = {
 }
 
 
-def _load_report_template(locale: str) -> Dict[str, str]:
+def _load_report_template(locale: str) -> Optional[Dict[str, str]]:
     """Parse report.<locale>.md for 5 sections: header, axis_block, quote_line, insufficient_block, footer (optional)."""
     root = Path(__file__).parent.parent.parent / f"skills/whoami/templates/report.{locale}.md"
     try:

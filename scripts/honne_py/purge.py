@@ -1,7 +1,6 @@
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def purge(all_: bool = False, keep_assets: bool = False, force: bool = False) -> int:
@@ -35,7 +34,9 @@ def purge(all_: bool = False, keep_assets: bool = False, force: bool = False) ->
     elif keep_assets:
         for item in honne_dir.iterdir():
             if item.name != "assets":
-                if item.is_dir():
+                if item.is_symlink():
+                    item.unlink()
+                elif item.is_dir():
                     shutil.rmtree(item)
                 else:
                     item.unlink()

@@ -118,8 +118,6 @@ Report saved files to `.honne/persona.json` and `docs/honne.md`. Use `/honne:com
 
 Output the following next action suggestions to the user:
 
-**다음 액션 제안**
-- 이 형태로 나의 분신(페르소나) 구현해보기
-- 효율적인 토큰 사용을 위한 분석 가이드
-
-*(these features are coming soon.)*
+**Next actions**
+- `/honne:persona` — generate two personas (antipattern × signature) from this profile
+- `/honne:crush <topic>` — stage a live debate between the two personas
