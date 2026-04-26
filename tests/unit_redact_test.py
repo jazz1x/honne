@@ -1,4 +1,4 @@
-"""Unit tests for scripts/_redact.py — 12 sensitive pattern masks.
+"""Unit tests for scripts/_redact.py — 18 sensitive pattern masks.
 
 Each pattern gets an explicit positive case (input → masked marker present,
 raw secret absent) plus a shared negative sanity check (ordinary text is
@@ -18,6 +18,10 @@ _redact = importlib.import_module("_redact")
         ("stripe pk_live_AAAAAAAAAAAAAAAAAAAAAAA", "[REDACTED:api-key]", "pk_live_AAAAAAAAAAAAAAAAAAAAAAA"),
         ("aws AKIAIOSFODNN7EXAMPLE", "[REDACTED:aws]", "AKIAIOSFODNN7EXAMPLE"),
         ("github ghp_abcdefghijklmnopqrstuvwxyz0123456789ABCD", "[REDACTED:gh]", "ghp_abcdefghijklmnopqrstuvwxyz0123456789ABCD"),
+        ("github github_pat_11ABCDEFGH0123456789_abcdefghijklmnopqrstuv", "[REDACTED:gh-pat]", "github_pat_11ABCDEFGH0123456789_abcdefghijklmnopqrstuv"),
+        ("slack " + "xox" + "b-0000000000000-0000000000000-AAAAAAAAAAAAAAAA", "[REDACTED:slack-token]", "xox" + "b-0000000000000-0000000000000-AAAAAAAAAAAAAAAA"),
+        ("gcp AIzaSyA1234567890abcdefghijklmnopqrstuv", "[REDACTED:gcp-api-key]", "AIzaSyA1234567890abcdefghijklmnopqrstuv"),
+        ("-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA\n-----END RSA PRIVATE KEY-----", "[REDACTED:private-key]", "MIIEowIBAAKCAQEA"),
         (
             "jwt eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4ifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
             "[REDACTED:jwt]",
@@ -79,7 +83,10 @@ def test_fixture_file_all_markers_present(tmp_path):
         "[REDACTED:api-key]",
         "[REDACTED:aws]",
         "[REDACTED:gh]",
+        "[REDACTED:gh-pat]",
+        "[REDACTED:gcp-api-key]",
         "[REDACTED:jwt]",
+        "[REDACTED:private-key]",
         "[REDACTED:slack-webhook]",
         "[REDACTED:discord-webhook]",
         "[REDACTED:bearer]",

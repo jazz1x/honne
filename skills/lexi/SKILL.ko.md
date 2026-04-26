@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.1
+version: 0.0.2
 description: >
   어휘 축 독립형 — 고빈도 어휘, 코드 스위칭 비율, 의성어 추출.
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".

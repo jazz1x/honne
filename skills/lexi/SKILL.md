@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.1
+version: 0.0.2
 description: >
   Lexicon axis standalone — extract high-frequency vocabulary, code-switching ratio, onomatopoeia.
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".

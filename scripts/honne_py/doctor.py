@@ -17,6 +17,7 @@ def main() -> int:
     try:
         honne_dir.mkdir(exist_ok=True)
     except OSError:
+        sys.stderr.write(".honne/ directory creation failed\n")
         return 73
     if not os.access(honne_dir, os.W_OK):
         sys.stderr.write(".honne/ not writable\n")

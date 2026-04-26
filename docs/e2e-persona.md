@@ -30,7 +30,6 @@ Manual verification checklist after split-persona pivot and hardening (PRD 0.0.2
 - [ ] No `/tmp` writes: all files go to `.honne/cache/` or `.honne/personas/`
 - [ ] No CLAUDE.md injection
 - [ ] `record claim --quotes-file` accepts file-based JSON (Korean + special chars safe)
-- [ ] `/honne:setup` outputs `allowedTools` snippet for settings.json
 
 ## Integration
 

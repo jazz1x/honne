@@ -19,30 +19,6 @@ _EXTRACTORS = {
 }
 
 
-def _top_k(items: list, k: int = 3) -> list:
-    """Deterministic top-k:
-       1) frequency (or support_count) desc
-       2) ts asc
-       3) session_id asc (final tiebreak)
-       Dedup by normalized text; keep first occurrence.
-       Returns 0..k items if fewer candidates exist.
-    """
-    seen = set()
-    dedup = []
-    for it in items:
-        t = (it.get("text") or it.get("quote") or "").strip()
-        if not t or t in seen:
-            continue
-        seen.add(t)
-        dedup.append(it)
-    dedup.sort(key=lambda x: (
-        -(x.get("frequency") or x.get("support_count") or 0),
-        x.get("ts") or "",
-        x.get("session_id") or "",
-    ))
-    return dedup[:k]
-
-
 def _load_template(locale: str, axis: str) -> dict:
     """Parse templates/axes.<locale>.md.
 

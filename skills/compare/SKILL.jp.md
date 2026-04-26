@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.0.1
+version: 0.0.2
 description: >
   資産のみの振り返り。トランスクリプト再スキャン、LLM再分析、HITL なし。
   Triggers: "compare", "review past", "what changed", "self retrospective".

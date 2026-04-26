@@ -1,4 +1,4 @@
-from typing import Union, Optional, List, Iterator
+from typing import Union
 import hashlib
 import json
 import tempfile
@@ -41,12 +41,3 @@ def load_cache(path: Union[Path, str]) -> Union[dict, list]:
         return {}
     with open(path, "r") as f:
         return json.load(f)
-
-
-def append_jsonl(path: Union[Path, str], obj: dict) -> None:
-    """Append a JSON object as a single line to a JSONL file."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(path, "a") as f:
-        f.write(json.dumps(obj) + "\n")

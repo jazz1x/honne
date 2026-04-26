@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.0.2] — 2026-04-24
+## [0.0.2] — 2026-04-26
 
 Split-persona pivot: two independent personas generated separately, then debated live via new `/honne:crush` skill.
 
@@ -34,7 +34,7 @@ Split-persona pivot: two independent personas generated separately, then debated
 
 - `persona` (ko / en / jp): 5-step flow — locale HITL → persona.json validation → conflict payload → LLM synthesis → render personas (generation-only, no activation)
 - `crush` (ko / en / jp): 6-step debate orchestrator — topic input → persona validation → live 5-turn transcript with judge
-- `setup` (ko / en / jp): 3-step permission configurator — detect current state → generate allowedTools entries → auto-apply to project settings
+- `setup` skill removed — `allowedTools` auto-configuration did not effectively reduce permission prompts; auto mode recommended instead
 
 #### CLI
 
@@ -63,8 +63,7 @@ Split-persona pivot: two independent personas generated separately, then debated
 - `skills/crush/SKILL.md` (+ ko / jp): raw bash file checks replaced with `honne persona check` CLI calls
 - `skills/compare/SKILL.md` (+ ko / jp): `HONNE_ROOT` variable removed; direct `${CLAUDE_PLUGIN_ROOT}` usage
 - `persona_render.md`: consolidated from 3 identical locale-specific templates to single file
-- `skills/setup/SKILL.md` (+ ko / jp): `allowedTools` patterns changed from absolute `CLAUDE_PLUGIN_ROOT` paths to portable wildcard globs (`bash */scripts/honne *`); `CLAUDE_PLUGIN_ROOT` dependency removed from setup flow
-- `skills/setup/SKILL.md` (+ ko / jp): project key derivation fixed — removed erroneous `.lstrip('-')` that broke settings path resolution
+- `skills/whoami/SKILL.md` (+ ko / jp): "coming soon" placeholder replaced with concrete `/honne:persona` + `/honne:crush` next action links
 
 ### Fixed
 
@@ -78,12 +77,22 @@ Split-persona pivot: two independent personas generated separately, then debated
 - Cross-locale parity: `lexi` and `compare` ko/jp SKILL files aligned with en (missing bash blocks added)
 - `unit_cli_contract_test.py`: added CLI contract tests for `render personas` and `persona check` (0.0.2 commands)
 - `unit_persona_prompt_test.py`: added `TestPersonaCheckCLI` (exit 0/66 tests)
+- `scripts/honne_py/cli.py`: `--base-dir` argument now forwarded to `run_scan()` (was silently dropped)
+- `scripts/honne_py/record.py`: `--quotes-json` with malformed JSON now returns exit 1 with error message (was unhandled exception)
+- `scripts/honne_py/doctor.py`: `OSError` on `.honne/` mkdir now prints diagnostic (was silent exit 73)
+- `scripts/honne_py/purge.py`: `--keep-assets` now checks children for symlinks before `rmtree`
+- `scripts/honne_py/redact.py`: added 6 redaction patterns — Slack API tokens (`xoxb-`/`xoxp-`), GitHub fine-grained PATs (`github_pat_`), GCP API keys (`AIza`), PEM private key blocks
+- `scripts/honne_py/io.py`, `scan.py`, `render.py`, `purge.py`, `axis.py`: additional unused imports and dead code removed
+- `compare` and `lexi` SKILL versions bumped `0.0.1` → `0.0.2` (all 3 locales each)
+- Documentation: redaction pattern count updated 12 → 18 across README × 3, RELEASE.md
 
 ### Removed
 
 - `persona_prompt.{locale}.md` templates (replaced by `persona_render.md`)
 - `persona_render.{ko,en,jp}.md` (3 identical files → 1 locale-agnostic template)
 - Activation directive output from `/honne:persona` skill (no longer in-session embodiment claim)
+- `/honne:setup` skill (3 locales) — `allowedTools` auto-configuration was ineffective; auto mode recommended instead
+- "coming soon" placeholder from `/honne:whoami` completion output
 
 ---
 

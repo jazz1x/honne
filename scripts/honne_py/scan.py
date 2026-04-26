@@ -1,12 +1,11 @@
 import json
 import os
 import sys
-import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal, Iterator, Union, Optional
+from typing import Literal, Union, Optional
 
 from .io import atomic_write, sha256_file
 from .redact import redact
@@ -132,7 +131,6 @@ def run_scan(
         found += 1
 
     # Final progress
-    now = time.monotonic()
     sys.stderr.write(f"[scan] {len(jsonl_files)}/{len(jsonl_files)}\n")
     sys.stderr.flush()
 

@@ -160,6 +160,16 @@ def test_record_claim_args(tmp_path):
               "--quotes-json", '["quote1"]'])
 
 
+def test_record_claim_malformed_quotes_json(tmp_path):
+    out = tmp_path / "claims.jsonl"
+    rc = main(["record", "claim",
+               "--type", "claim", "--axis", "lexicon",
+               "--scope", "repo", "--claim", "test",
+               "--out", str(out),
+               "--quotes-json", '{bad json}'])
+    assert rc == 1
+
+
 # ── purge ─────────────────────────────────────────────────────────────────────
 
 def test_purge_all_force(tmp_path):

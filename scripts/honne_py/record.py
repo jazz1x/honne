@@ -39,7 +39,11 @@ def record_claim(
             print(f"error: failed to read quotes file {quotes_file}: {e}", file=sys.stderr)
             return 1
     elif quotes_json:
-        quotes = json.loads(quotes_json)
+        try:
+            quotes = json.loads(quotes_json)
+        except json.JSONDecodeError as e:
+            print(f"error: malformed --quotes-json: {e}", file=sys.stderr)
+            return 1
     else:
         quotes = []
 

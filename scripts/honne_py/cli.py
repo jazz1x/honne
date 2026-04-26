@@ -162,6 +162,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             cache=args.cache,
             index_ref=args.index_ref,
             redact_secrets=args.redact,
+            base_dir=args.base_dir,
             run_id=args.run_id,
         )
 
