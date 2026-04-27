@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import unicodedata
@@ -89,6 +90,7 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
     lang_split = {"ko": 0, "en": 0}
     ko_msg_avg = []
     en_msg_avg = []
+    matched_session_ids: set = set()
 
     for session in sessions:
         messages = session.get("messages", [])
@@ -100,7 +102,7 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
             if msg.get("role") == "user":
                 text = msg.get("text", "")
                 first_10_lines = "\n".join(text.split("\n")[:10])
-                preamble_hash = hash(first_10_lines) % (10 ** 10)
+                preamble_hash = int(hashlib.sha256(first_10_lines.encode()).hexdigest(), 16) % (10 ** 10)
                 preamble_hashes[preamble_hash] += 1
                 if preamble_hash not in preamble_first:
                     preamble_first[preamble_hash] = {
@@ -120,9 +122,11 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
         if total_alpha > 0 and ko_count / total_alpha >= 0.3:
             lang_split["ko"] += 1
             ko_msg_avg.append(len(user_msgs))
-        else:
+            matched_session_ids.add(sid)
+        elif total_alpha > 0:
             lang_split["en"] += 1
             en_msg_avg.append(len(user_msgs))
+            matched_session_ids.add(sid)
 
     # Top preambles — no threshold, top 5 by frequency
     top_preambles = [
@@ -145,7 +149,7 @@ def extract_obsession(input_path: Union[Path, str], out_path: Union[Path, str]) 
             "avg_messages_en": round(sum(en_msg_avg) / len(en_msg_avg), 2) if en_msg_avg else 0,
         },
         "top_preambles": top_preambles,
-        "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len([s for s in sessions if lang_split["ko"] or lang_split["en"]])},
+        "session_coverage": {"total_sessions": len(sessions), "matched_sessions": len(matched_session_ids)},
     }
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

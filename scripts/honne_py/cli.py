@@ -293,4 +293,5 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .doctor import main as doctor_main
         return doctor_main()
 
-    return 0
+    print(f"error: unrecognized command or missing subcommand: {' '.join(argv or [])}", file=sys.stderr)
+    return 1

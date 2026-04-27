@@ -12,6 +12,7 @@
 ## 축 2 — 반응 (Reaction)
 
 **요약**: 반응 패턴: pivot(1)
+> [] 2025-12-01T10:00:00Z — pivot response _(freq: )_
 
 ## 축 3 — 워크플로 (Workflow)
 

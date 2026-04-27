@@ -1,6 +1,6 @@
 {
   "name": "honne",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "LLM 과 나눈 흔적에서 당신 자신의 패턴을 끌어냅니다 — tatemae 아래의 honne.",
   "author": { "name": "jazz1x", "url": "https://github.com/jazz1x" },
   "repository": "https://github.com/jazz1x/honne",

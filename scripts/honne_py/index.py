@@ -15,15 +15,21 @@ def index_session(jsonl_path: Union[Path, str], out_path: Union[Path, str]) -> i
                     continue
                 obj = json.loads(line)
                 if obj.get("message", {}).get("role"):
+                    content = obj["message"].get("content", "")
+                    if isinstance(content, list):
+                        content = " ".join(
+                            b.get("text", "") if isinstance(b, dict) else str(b)
+                            for b in content
+                        )
                     messages.append({
                         "role": obj["message"]["role"],
-                        "text": obj["message"].get("content", "")[:100],
+                        "text": str(content)[:100],
                     })
     except Exception:
         return 1
 
     result = {
-        "session_id": "",
+        "session_id": jsonl_path.stem,
         "message_count": len(messages),
         "preview": messages[:3],
     }

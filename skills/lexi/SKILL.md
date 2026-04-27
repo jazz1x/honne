@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.2
+version: 0.0.3
 description: >
   Lexicon axis standalone — extract high-frequency vocabulary, code-switching ratio, onomatopoeia.
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".
@@ -8,21 +8,24 @@ description: >
 
 # lexi — Lexicon Axis
 
-Standalone lexicon extraction and analysis. Runs extract-lexicon.sh, presents findings, records claims per axis.
+Standalone lexicon extraction and analysis. Uses the unified `honne` CLI, presents findings, records claims.
 
 ## Process
 
-1. Ask for scope (repo/global)
-2. Run scan-transcripts.sh
-3. Run extract-lexicon.sh --input .honne/cache/scan.json --top 50 --min-sessions 2
-4. LLM summarizes top terms with evidence-gather.sh quotes
-5. HITL: present claim with samples, ask (y/n/edit)
-6. Record as claim/rejection asset
-7. Check past rejections to avoid re-proposing
+1. Ask for scope (repo/global). Set `SCOPE` and `LOCALE` variables.
+2. Run scan: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" scan --base-dir ".honne" --scope "$SCOPE"`
+3. Run axis extraction: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis run lexicon --scan .honne/cache/scan.json --locale "$LOCALE"`
+4. Read JSON output — review `candidate_claim`, `quotes`, `insufficient_evidence` fields
+5. HITL: present candidate claim with sample quotes, ask (y/n/edit)
+   - **y**: proceed to step 6
+   - **n**: record rejection — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim --base-dir ".honne" --type rejection --axis lexicon --scope "$SCOPE" --text "$candidate"`; skip to done
+   - **edit**: user provides revised text, use as claim
+6. Record claim: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim --base-dir ".honne" --type claim --axis lexicon --scope "$SCOPE" --text "$claim"`
+7. Check past rejections to avoid re-proposing: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --type rejection --tag lexicon --scope "$SCOPE"`
 
 **Progress monitoring** — use Monitor until-loop (never `sleep N && cat`):
 ```bash
-# ✓ Monitor: until [ -f ".honne/cache/lexicon.json" ]
+# ✓ Monitor: until [ -f ".honne/cache/.axis_lexicon.json" ]
 ```
 
-Report saved to stdout + .honne/assets/claim.jsonl
+Report saved to stdout + .honne/assets/claims.jsonl

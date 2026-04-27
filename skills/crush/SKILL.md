@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.2
+version: 0.0.3
 description: >
   Stage a live debate between your persona's antipattern and signature voices on a topic.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".

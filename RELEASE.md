@@ -1,4 +1,4 @@
-# honne v0.0.2
+# honne v0.0.3
 
 **Evidence-backed self-observation from your local LLM transcripts.**
 
@@ -6,23 +6,42 @@ honne reads the conversation history you've accumulated with Claude and extracts
 
 ---
 
-## What's new in 0.0.2
+## What's new in 0.0.3
 
-### Split-persona pivot
+### Production hardening
 
-`/honne:persona` now generates **two independent personas** (antipattern × signature) instead of a single merged verdict. Each persona has its own system prompt, name, and one-liner. A judge system prompt mediates between them.
+Fourteen issues identified by static + dynamic inspection resolved. One real bug discovered and fixed during coverage test authoring.
 
-### `/honne:crush` — Live debate
+**Critical fixes**
+- `signature` axis was silently absent from the LLM synthesis prompt schema (all 3 locales). Narrative synthesis now covers all 7 axes.
+- `query --scope / --tag / --tags` parameters were accepted but never applied. Filtering now works correctly.
 
-Stage a 5-turn debate between your two personas on any topic. Antipattern attacks, signature rebuts, judge delivers the verdict. Transcript is ephemeral — no files written.
+**Bug fixes**
+- `evidence.gather()`: `max_` limit was applied to the inner message loop only — the outer session loop continued accumulating matches. Fixed with an outer-loop guard.
+- `scan.py`: `since` parameter with a datetime string could incorrectly exclude same-day files. Now normalized to date-only before comparison.
+- `extract.py`: `hash()` for ritual/obsession key generation is PYTHONHASHSEED-sensitive. Replaced with deterministic `hashlib.sha256`.
+- `record.py`: claim IDs could collide between runs. Hash now includes `run_id` + `created_at`.
+- `render.py`: quote lines were not rendered in the output report. Implemented `quote_line` template section (up to 3 per axis).
+- `index.py`: session ID was hardcoded `""`. Now derived from the JSONL filename stem.
 
-### Hardening
+**Correctness fixes**
+- `whoami` SKILL: "6-Axis" label updated to "7-Axis" in frontmatter and H1 (all 3 locales).
+- `lexi` SKILL: obsolete shell script references replaced with `honne axis run lexicon` + `honne record claim` pattern.
+- `whoami` SKILL step 3: HITL rejection branch now writes `honne record claim --type rejection`.
+- `precommit.py`: marketplace.json relative-source block was documented but not implemented. Now actually rejects.
+- `cli.py`: unrecognized command combinations now print an error and exit 1 (was silent exit 0).
 
-- All intermediate data writes to `.honne/cache/` — no `/tmp` usage
-- `--quotes-file` replaces `--quotes-json` for shell-safe quote passing
-- SKILL bash blocks restructured: every command starts with `bash`, `python3`, or `date` for `allowedTools` matchability
-- Error paths produce diagnostic messages (missing scan, null personas, wrong quotes schema)
-- No CLAUDE.md injection, no activation language in persona output
+### Test coverage (+80 tests)
+
+353 pytest + 38 bats — all passing.
+
+New test files:
+- `unit_scan_since_test.py` — since-filter date normalization
+- `unit_core_modules_test.py` — `detect_recurrence`, `evidence`, `purge`, `io` behavioral tests
+- `unit_extractor_test.py` — boundary conditions for all 5 previously-untested extractors
+- `unit_render_test.py` (extended) — `TestQuoteLineRendering` quote regression guard
+- `e2e_pipeline_test.py` — scan → 7-axis extract → claim record end-to-end
+- `e2e_query_filter.bats` / `e2e_doctor.bats` — CLI filter and doctor tests
 
 ---
 
@@ -47,9 +66,9 @@ Everything stays local under `.honne/` in your project directory. 18 sensitive p
 ## Infrastructure
 
 - Zero external dependencies beyond python3 ≥ 3.9
-- 271 unit tests (pytest) + e2e verification suite
+- 353 pytest + 38 bats — all sandboxed, real `~/.claude/` never touched
 - `SessionEnd` hook: passive transcript indexing — metadata only, no LLM, no context injection
-- Pre-commit: shellcheck, JSON syntax, SKILL.md frontmatter validation
+- Pre-commit: shellcheck, JSON syntax, SKILL.md frontmatter, marketplace.json relative-source block
 - 3 locales: ko / en / jp — all skills, all templates
 
 ---

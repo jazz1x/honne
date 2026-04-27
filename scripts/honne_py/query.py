@@ -6,7 +6,7 @@ from pathlib import Path
 
 def query(
     base_dir: Union[Path, str],
-    scope: str = "repo",
+    scope: str = None,
     since: str = None,
     until: str = None,
     tag: str = None,
@@ -59,6 +59,14 @@ def query(
                     continue
                 if until and obj.get("created_at", "") > until:
                     continue
+                if scope is not None and obj.get("scope") != scope:
+                    continue
+                if tag is not None and obj.get("axis") != tag:
+                    continue
+                if tags is not None:
+                    tag_list = [t.strip() for t in tags.split(",")]
+                    if obj.get("axis") not in tag_list:
+                        continue
 
                 result.append(obj)
     except Exception as e:

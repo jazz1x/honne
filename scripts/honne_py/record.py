@@ -21,9 +21,10 @@ def record_claim(
     """Record a claim to JSONL."""
     out_path = Path(out_path)
 
-    # Generate SHA256 ID
-    claim_text = f"{type_}:{axis}:{claim}"
-    claim_id = hashlib.sha256(claim_text.encode()).hexdigest()[:16]
+    created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    claim_id = hashlib.sha256(
+        f"{type_}:{axis}:{claim}:{run_id or ''}:{created_at}".encode()
+    ).hexdigest()[:16]
 
     if quotes_file:
         try:
@@ -57,7 +58,7 @@ def record_claim(
         "support_count": support_count,
         "prior_id": prior_id,
         "quotes": quotes,
-        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created_at": created_at,
     }
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

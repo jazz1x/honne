@@ -1,15 +1,15 @@
 ---
 name: whoami
-version: 0.0.2
+version: 0.0.3
 description: >
-  ローカルLLMトランスクリプトから6軸の自己観察を編成します。
+  ローカルLLMトランスクリプトから7軸の自己観察を編成します。
   自律的な証拠収集 + LLM合成ナラティブ。
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
-# honne — 6軸自己観察
+# honne — 7軸自己観察
 
-**呼び出されたら、ステップ1からステップ7まで順番に実行してください。スキルを説明したり、ユーザーが何を望むかを尋ねたりしないでください — 呼び出し自体がリクエストです。ステップ1の質問から始めてください。**
+**呼び出されたら、ステップ1からステップ6まで順番に実行してください。スキルを説明したり、ユーザーが何を望むかを尋ねたりしないでください — 呼び出し自体がリクエストです。ステップ1の質問から始めてください。**
 
 ## ステップ1: 範囲 + 言語HITL
 
@@ -33,6 +33,16 @@ description: >
 ## ステップ3: 却下の再フレーミングフィルタ (候補をスキップ)
 各軸について、`bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --tag "<axis>" --type rejection --scope "$SCOPE"`を実行します。
 ステップ4で各軸を記録する前に、候補を `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"` にパイプします — exit 3 = 重複、スキップして「再フレーミング」をログします。すべての変数は大きなダブルクォートで引用する必要があります(空白・特殊文字の安全性)。LLM呼び出しなし。
+
+**却下の記録**: ユーザーが候補主張を明示的に「n」で拒否した場合、ステップ3フィルターで将来使用できるよう却下として記録します:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
+  --type rejection --axis "$axis" --scope "$SCOPE" \
+  --claim "$CANDIDATE" --run-id "$RUN_ID" \
+  --out ".honne/assets/rejections.jsonl"
+```
+
+<!-- TODO(evolutions): evolutions.jsonlのクロスラン差分追跡はまだ実装されていません。query --type evolutionは常に[]を返します。構造的変更が必要です。 -->
 
 ## ステップ4: 軸ごとの自律的な記録
 

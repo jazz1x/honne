@@ -1,15 +1,15 @@
 ---
 name: whoami
-version: 0.0.2
+version: 0.0.3
 description: >
-  Orchestrate 6-axis self-observation from local LLM transcripts.
+  Orchestrate 7-axis self-observation from local LLM transcripts.
   Autonomous evidence gathering + LLM-synthesized narrative.
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
-# honne — 6-Axis Self-Observation
+# honne — 7-Axis Self-Observation
 
-**When invoked, execute Step 1 through Step 7 in order immediately. Do not summarize the skill or ask what the user wants — invocation itself is the request. Start by asking the Step 1 question.**
+**When invoked, execute Step 1 through Step 6 in order immediately. Do not summarize the skill or ask what the user wants — invocation itself is the request. Start by asking the Step 1 question.**
 
 ## Step 1: Scope + Locale HITL
 
@@ -33,6 +33,17 @@ Non-zero exit → output stdout+stderr verbatim to user, stop. Do not interpret 
 ## Step 3: Rejection reframe filter (skip candidate)
 For each axis, run: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --tag "<axis>" --type rejection --scope "$SCOPE"`
 Before Step 4 records each axis, pipe the candidate through `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"` — exit 3 = overlap, skip and log "reframed". 모든 변수는 큰따옴표 인용 필수(공백·특수문자 안전). LLM 호출 없음.
+
+**Recording rejections**: If the user explicitly says "n" or rejects a candidate claim for any axis, record it as a rejection so Step 3 can filter it in future runs:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
+  --type rejection --axis "$axis" --scope "$SCOPE" \
+  --claim "$CANDIDATE" --run-id "$RUN_ID" \
+  --out ".honne/assets/rejections.jsonl"
+```
+
+<!-- TODO(evolutions): evolutions.jsonl cross-run diff tracking is not yet implemented. query --type evolution always returns []. Structural change required. -->
+
 
 ## Step 4: Per-axis autonomous record
 

@@ -200,7 +200,6 @@ def render_report(
                 axis_header = _get_axis_header(persona, axis, locale)
                 claim = axis_data.get("claim", "")
                 quotes = axis_data.get("quotes", [])
-                evidence_count = len(quotes)
                 explanation = axis_data.get("explanation")
 
                 # Render axis block
@@ -211,6 +210,19 @@ def render_report(
                 if explanation is None:
                     axis_block = _EXPLANATION_LINE_RE[locale].sub('', axis_block)
                 axis_block = axis_block.replace("{axis_explanation}", explanation if explanation is not None else "")
+
+                # Render quotes if template section available
+                if quotes and "quote_line" in tpl:
+                    quote_lines = []
+                    for q in quotes[:3]:
+                        line = tpl["quote_line"]
+                        line = line.replace("{quote_session}", str(q.get("session", "")))
+                        line = line.replace("{quote_ts}", str(q.get("ts", "")))
+                        line = line.replace("{quote_text}", str(q.get("text", "")))
+                        line = line.replace("{quote_freq}", str(q.get("freq", "")))
+                        quote_lines.append(line)
+                    axis_block = axis_block + "\n" + "\n".join(quote_lines)
+
                 axis_renders.append(axis_block)
 
         # Assemble final output

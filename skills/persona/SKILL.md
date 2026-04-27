@@ -1,6 +1,6 @@
 ---
 name: persona
-version: 0.0.2
+version: 0.0.3
 description: >
   Conflict synthesis from antipattern × signature axes.
   Generates a working persona prompt from your observed patterns.

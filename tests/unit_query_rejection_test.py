@@ -53,9 +53,9 @@ class TestQueryRejectionMissingFiles:
         # Create rejections.jsonl with one broken line
         rejections_file = asset_dir / "rejections.jsonl"
         rejections_file.write_text(
-            '{"id":"r1","type":"rejection"}\n'
+            '{"id":"r1","type":"rejection","scope":"repo"}\n'
             'invalid json line\n'
-            '{"id":"r2","type":"rejection"}\n'
+            '{"id":"r2","type":"rejection","scope":"repo"}\n'
         )
 
         result = query(
@@ -90,8 +90,9 @@ class TestQueryRejectionMissingFiles:
         assert result == 0
         captured = capsys.readouterr()
         output = json.loads(captured.out)
-        # Both records returned (scope filter not applied in basic query)
-        assert len(output) == 2
+        # Only "repo" scope record returned
+        assert len(output) == 1
+        assert output[0]["id"] == "r1"
 
     def test_query_type_claim_uses_claims_file(self, tmp_path, capsys):
         """type=claim → read from claims.jsonl."""

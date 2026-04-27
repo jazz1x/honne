@@ -2,7 +2,7 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
-![version](https://img.shields.io/badge/version-0.0.2-blue)
+![version](https://img.shields.io/badge/version-0.0.3-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -73,7 +73,7 @@ Expected output:
 Expected output:
 
 ```
-✓ Installed honne@0.0.2 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.3 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 Scope options:
