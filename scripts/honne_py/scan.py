@@ -81,7 +81,9 @@ def run_scan(
             with open(index_ref) as f:
                 data = json.load(f)
                 for session in data.get("sessions", []):
-                    known_shas.add(session.get("sha256", ""))
+                    sha = session.get("sha256")
+                    if sha:
+                        known_shas.add(sha)
         except Exception:
             pass
 
@@ -115,7 +117,7 @@ def run_scan(
 
         # Since filter
         file_mtime = datetime.fromtimestamp(jsonl_path.stat().st_mtime).strftime("%Y-%m-%d")
-        if file_mtime < since:
+        if file_mtime < since[:10]:
             continue
 
         # Parse session

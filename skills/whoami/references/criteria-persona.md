@@ -12,6 +12,7 @@
 | 4 | Obsession | detect-recurrence.sh | ≥ 3 sessions | Topic recurrence frequency |
 | 5 | Ritual | internal (session boundary patterns) | ≥ 3 sessions | Dispositional session habits |
 | 6 | Antipattern | internal (rejection language) | ≥ 3 sessions | Rejected framing patterns |
+| 7 | Signature | internal (decisive close + targeted request patterns) | ≥ 3 sessions | Characteristic closing and precision patterns |
 
 ## Horoscope defenses
 

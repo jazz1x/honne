@@ -17,6 +17,8 @@ def gather(input_path: Union[Path, str], claim: str, out_path: Union[Path, str],
     evidence = []
 
     for session in sessions:
+        if len(evidence) >= max_:
+            break
         messages = session.get("messages", [])
         for msg in messages:
             text = msg.get("text", "").lower()

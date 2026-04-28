@@ -29,7 +29,7 @@ class TestCrushSkillFilesExist:
             assert m, f"version missing in SKILL ({locale})"
             versions[locale] = m.group(1).strip()
         assert len(set(versions.values())) == 1, f"Version mismatch: {versions}"
-        assert "0.0.2" in list(versions.values())[0], "Version should be 0.0.2"
+        assert re.fullmatch(r"\d+\.\d+\.\d+", list(versions.values())[0]), "Version should be SemVer"
 
     def test_name_is_crush(self):
         for locale in ["en", "ko", "jp"]:

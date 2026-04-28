@@ -268,9 +268,10 @@ class TestPluginJson:
         assert "version" in data
         assert "skills" in data
 
-    def test_plugin_json_version_0_0_2(self):
+    def test_plugin_json_version_is_semver(self):
+        import re
         data = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))
-        assert data["version"] == "0.0.2", f"Expected version 0.0.2, got {data['version']}"
+        assert re.fullmatch(r"\d+\.\d+\.\d+", data["version"]), f"Expected SemVer, got {data['version']}"
 
     def test_skills_directory_pointer(self):
         data = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))

@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.2
+version: 0.0.3
 description: >
   두 인격(비효율 vs 강점)이 주제를 두고 벌이는 라이브 토론.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".

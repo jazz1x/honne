@@ -450,3 +450,94 @@ class TestRenderReportErrors:
         }), encoding="utf-8")
         rc = render_report(persona_path=persona, locale="xx", out_path=tmp_path / "r.md")
         assert rc == 1
+
+
+def _persona_with_quotes(tmp_path: Path, quotes: list, locale: str = "ko") -> Path:
+    """Write a persona.json with quotes on the lexicon axis only."""
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    persona = tmp_path / "persona.json"
+    persona.write_text(json.dumps({
+        "generated_at": NOW,
+        "scope": "repo",
+        "locale": locale,
+        "run_id": RUN_ID,
+        "oneliner": None,
+        "axes": {
+            "lexicon": {
+                "claim": "Frequent expressions: foo(3)",
+                "quotes": quotes,
+                "evidence_strength": round(min(len(quotes), 3) / 3, 2),
+                "run_ts": NOW,
+                "explanation": None,
+            },
+            **{a: None for a in ["reaction", "workflow", "obsession", "ritual", "antipattern", "signature"]},
+        },
+    }, ensure_ascii=False), encoding="utf-8")
+    return persona
+
+
+class TestQuoteLineRendering:
+    """Regression tests ensuring quote_line sections appear in rendered reports."""
+
+    def test_quote_text_appears_in_report(self, tmp_path):
+        """Quotes have non-empty text → that text appears in the report."""
+        quotes = [{"session": "s001", "ts": "2025-01-01T10:00:00Z", "text": "distinctive quote content", "freq": 3}]
+        persona = _persona_with_quotes(tmp_path, quotes)
+        out = tmp_path / "report.md"
+
+        rc = render_report(persona_path=persona, locale="ko", out_path=out)
+        assert rc == 0
+        content = out.read_text(encoding="utf-8")
+        assert "distinctive quote content" in content
+
+    def test_max_3_quotes_rendered(self, tmp_path):
+        """More than 3 quotes → only 3 are rendered (capped per template logic)."""
+        quotes = [
+            {"session": f"s00{i}", "ts": "2025-01-01T10:00:00Z", "text": f"quote number {i}", "freq": i}
+            for i in range(6)
+        ]
+        persona = _persona_with_quotes(tmp_path, quotes)
+        out = tmp_path / "report.md"
+
+        rc = render_report(persona_path=persona, locale="ko", out_path=out)
+        assert rc == 0
+        content = out.read_text(encoding="utf-8")
+        # quotes 0-2 rendered, 3-5 not
+        assert "quote number 0" in content
+        assert "quote number 1" in content
+        assert "quote number 2" in content
+        assert "quote number 3" not in content
+        assert "quote number 4" not in content
+
+    def test_no_quotes_no_quote_lines(self, tmp_path):
+        """Empty quotes list → no quote lines in report (claim only)."""
+        persona = _persona_with_quotes(tmp_path, [])
+        out = tmp_path / "report.md"
+
+        rc = render_report(persona_path=persona, locale="ko", out_path=out)
+        assert rc == 0
+        content = out.read_text(encoding="utf-8")
+        # Claim should still appear
+        assert "Frequent expressions: foo(3)" in content
+
+    def test_quote_session_id_appears(self, tmp_path):
+        """Quote session field appears in rendered output."""
+        quotes = [{"session": "sess-abc123", "ts": "2025-06-01T00:00:00Z", "text": "test", "freq": 1}]
+        persona = _persona_with_quotes(tmp_path, quotes)
+        out = tmp_path / "report.md"
+
+        rc = render_report(persona_path=persona, locale="ko", out_path=out)
+        assert rc == 0
+        content = out.read_text(encoding="utf-8")
+        assert "sess-abc123" in content
+
+    def test_quote_rendering_all_three_locales(self, tmp_path):
+        """Quote_line rendered for all 3 locales (ko/en/jp)."""
+        quotes = [{"session": "s1", "ts": "2025-01-01T00:00:00Z", "text": "locale test quote", "freq": 2}]
+        for locale in ("ko", "en", "jp"):
+            persona = _persona_with_quotes(tmp_path / locale, quotes, locale=locale)
+            out = tmp_path / locale / "report.md"
+            rc = render_report(persona_path=persona, locale=locale, out_path=out)
+            assert rc == 0, f"render_report failed for locale={locale}"
+            content = out.read_text(encoding="utf-8")
+            assert "locale test quote" in content, f"quote text missing for locale={locale}"

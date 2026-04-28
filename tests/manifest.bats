@@ -117,3 +117,52 @@ EOF
   [ "$status" -ne 0 ]
   [[ "$output" =~ "name contains ':'" ]]
 }
+
+@test "pre-commit rejects marketplace.json with relative source" {
+  tmp="$(mktemp -d -t honne-marketplace-test-XXXXXX)"
+  cp -R "$REPO_ROOT" "$tmp/repo"
+  cd "$tmp/repo"
+
+  # Stage a marketplace.json with a relative source (the footgun pattern)
+  cat > .claude-plugin/marketplace.json <<'EOF'
+{
+  "plugins": [
+    {
+      "name": "honne",
+      "version": "0.0.3",
+      "source": "./"
+    }
+  ]
+}
+EOF
+  git add .claude-plugin/marketplace.json
+
+  HONNE_SKIP_TESTS=1 run bash scripts/pre-commit.sh
+  rm -rf "$tmp"
+  [ "$status" -ne 0 ]
+  [[ "$output" =~ "relative source" ]]
+}
+
+@test "pre-commit accepts marketplace.json with registry URL source" {
+  tmp="$(mktemp -d -t honne-marketplace-ok-XXXXXX)"
+  cp -R "$REPO_ROOT" "$tmp/repo"
+  cd "$tmp/repo"
+
+  # Stage a marketplace.json with a real registry URL
+  cat > .claude-plugin/marketplace.json <<'EOF'
+{
+  "plugins": [
+    {
+      "name": "honne",
+      "version": "0.0.3",
+      "source": "https://registry.example.com/honne"
+    }
+  ]
+}
+EOF
+  git add .claude-plugin/marketplace.json
+
+  HONNE_SKIP_TESTS=1 run bash scripts/pre-commit.sh
+  rm -rf "$tmp"
+  [ "$status" -eq 0 ]
+}

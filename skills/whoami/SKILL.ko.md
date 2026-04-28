@@ -1,15 +1,15 @@
 ---
 name: whoami
-version: 0.0.2
+version: 0.0.3
 description: >
-  로컬 LLM 트랜스크립트에서 6축 자기관찰을 오케스트레이션합니다.
+  로컬 LLM 트랜스크립트에서 7축 자기관찰을 오케스트레이션합니다.
   자율 증거 수집 + LLM 합성 해설.
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
 ---
 
-# honne — 6축 자기관찰
+# honne — 7축 자기관찰
 
-**호출 시 1단계부터 7단계까지 순서대로 즉시 실행합니다. 스킬을 설명하거나 사용자가 원하는 것을 묻지 않으십시오 — 호출 자체가 요청입니다. 1단계 질문으로 시작하십시오.**
+**호출 시 1단계부터 6단계까지 순서대로 즉시 실행합니다. 스킬을 설명하거나 사용자가 원하는 것을 묻지 않으십시오 — 호출 자체가 요청입니다. 1단계 질문으로 시작하십시오.**
 
 ## 1단계: 범위 + 언어 HITL
 
@@ -33,6 +33,16 @@ description: >
 ## 3단계: 거절 재구성 필터 (후보 건너뛰기)
 각 축에 대해 `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" query --base-dir ".honne" --tag "<axis>" --type rejection --scope "$SCOPE"`를 실행합니다.
 4단계에서 각 축을 기록하기 전에 후보를 `bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" axis validate --text "$candidate" --locale "$LOCALE" --skip-if-overlaps "$rejection_text"`로 파이프합니다 — exit 3 = 겹침, 건너뛰고 "재구성됨"을 로그합니다. 모든 변수는 큰따옴표 인용 필수(공백·특수문자 안전). LLM 호출 없음.
+
+**거절 기록**: 사용자가 후보 주장을 명시적으로 "n"으로 거절하면, 향후 3단계 필터에서 사용할 수 있도록 거절로 기록합니다:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
+  --type rejection --axis "$axis" --scope "$SCOPE" \
+  --claim "$CANDIDATE" --run-id "$RUN_ID" \
+  --out ".honne/assets/rejections.jsonl"
+```
+
+<!-- TODO(evolutions): evolutions.jsonl 교차 실행 diff 추적이 아직 구현되지 않았습니다. query --type evolution은 항상 []를 반환합니다. 구조적 변경이 필요합니다. -->
 
 ## 4단계: 축별 자율 기록
 

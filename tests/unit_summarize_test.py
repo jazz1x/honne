@@ -213,6 +213,7 @@ _FIXED_SIGNALS = {
     "obsession": {"top_preambles": [{"text": "why does this fail", "count": 2}, {"text": "how to fix", "count": 1}]},
     "ritual": {"counters": {"start": 3, "wrap": 1}, "top_examples": [{"key": "start", "first_text": "starting work"}, {"key": "wrap", "first_text": "wrap up"}]},
     "antipattern": {"counters": {"over-abstract": 2, "over-comment": 1}},
+    "signature": {"counters": {"decisive_close": 3, "targeted_request": 2}},
 }
 _FUNCS = {
     "lexicon": summarize.summarize_lexicon,
@@ -221,6 +222,7 @@ _FUNCS = {
     "obsession": summarize.summarize_obsession,
     "ritual": summarize.summarize_ritual,
     "antipattern": summarize.summarize_antipattern,
+    "signature": summarize.summarize_signature,
 }
 _EXPECTED = {
     ("ko", "lexicon"): "자주 쓰는 표현: foo(3), bar(1)",
@@ -229,23 +231,26 @@ _EXPECTED = {
     ("ko", "obsession"): '반복 주제: "why does this fail"(2) / "how to fix"(1)',
     ("ko", "ritual"): '세션 의식: "starting work"(3) / "wrap up"(1)',
     ("ko", "antipattern"): "비효율 패턴: over-abstract(2), over-comment(1)",
+    ("ko", "signature"): "시그니처 패턴: decisive_close(3), targeted_request(2)",
     ("en", "lexicon"): "Frequent expressions: foo(3), bar(1)",
     ("en", "reaction"): "Reaction patterns: pivot(2), agree(1)",
     ("en", "workflow"): "Workflow: scan → extract",
     ("en", "obsession"): 'Recurring topics: "why does this fail"(2) / "how to fix"(1)',
     ("en", "ritual"): 'Session ritual: "starting work"(3) / "wrap up"(1)',
     ("en", "antipattern"): "Antipatterns: over-abstract(2), over-comment(1)",
+    ("en", "signature"): "Signature patterns: decisive_close(3), targeted_request(2)",
     ("jp", "lexicon"): "よく使う表現: foo(3), bar(1)",
     ("jp", "reaction"): "反応パターン: pivot(2), agree(1)",
     ("jp", "workflow"): "作業順序: scan → extract",
     ("jp", "obsession"): '繰り返し話題: "why does this fail"(2) / "how to fix"(1)',
     ("jp", "ritual"): 'セッション儀式: "starting work"(3) / "wrap up"(1)',
     ("jp", "antipattern"): "反パターン: over-abstract(2), over-comment(1)",
+    ("jp", "signature"): "シグニチャパターン: decisive_close(3), targeted_request(2)",
 }
 
 
 @pytest.mark.parametrize("locale,axis", list(_EXPECTED.keys()))
-def test_summarize_18_matrix(locale, axis):
-    """6 axes × 3 locales = 18 fixed signal → expected string (PRD §6)."""
+def test_summarize_21_matrix(locale, axis):
+    """7 axes × 3 locales = 21 fixed signal → expected string."""
     result = _FUNCS[axis](_FIXED_SIGNALS[axis], locale)
     assert result == _EXPECTED[(locale, axis)]
