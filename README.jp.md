@@ -50,7 +50,28 @@ python3 がない、または 3.9 未満の場合、スクリプトは exit code
 
 ## インストール
 
-### 1. マーケットプレイスを登録
+### オプション 1 — `npx skills add` (推奨)
+
+Claude Code, Cursor, Codex, Windsurf など skills.sh 互換エージェントで動作します。
+
+```bash
+npx skills add jazz1x/honne                  # ./.claude/skills/ にインストール (プロジェクト)
+npx skills add jazz1x/honne -g               # ~/.claude/skills/ にインストール (グローバル, honne 推奨)
+npx skills add jazz1x/honne --list           # インストール前にスキル一覧を確認
+npx skills add jazz1x/honne --skill whoami   # 単一スキルのみインストール
+```
+
+期待される出力:
+
+```
+✓ Installed jazz1x/honne — 5 skills (whoami, lexi, compare, persona, crush)
+```
+
+グローバルインストール (`-g`) を推奨します — honne は全プロジェクトの transcripts を読むため、プロジェクトを跨ぐ履歴があるほど自己観察が豊かになります。
+
+### オプション 2 — Claude Code ネイティブプラグイン
+
+#### 1. マーケットプレイスを登録
 
 Claude Code セッション内で実行:
 
@@ -64,7 +85,7 @@ Claude Code セッション内で実行:
 ✓ Marketplace 'honne' added (1 plugin)
 ```
 
-### 2. プラグインをインストール
+#### 2. プラグインをインストール
 
 ```
 /plugin install honne --scope user
@@ -83,13 +104,13 @@ Claude Code セッション内で実行:
 | `--scope user` *(推奨)* | `~/.claude/` にインストール — **全プロジェクト**の transcripts を横断スキャン可能 | 通常利用。自己観察はプロジェクトを跨ぐ履歴があるほど豊かになります。 |
 | `--scope local` | 現在のプロジェクトの `.claude/` のみにインストール | お試し利用、または意図的に単一プロジェクトに限定したい場合。 |
 
-### 3. インストール確認
+#### 3. インストール確認
 
 ```
 /plugin list
 ```
 
-`honne` がリストに表示されていれば OK。以下の 3 つのスラッシュコマンドが補完できれば準備完了:
+`honne` がリストに表示されていれば OK。以下の 5 つのスラッシュコマンドが補完できれば準備完了:
 
 ```
 /honne:whoami
@@ -103,7 +124,7 @@ Claude Code セッション内で実行:
 
 `SessionEnd` フックは自動登録 — 追加設定不要。
 
-### 4. アンインストール
+#### 4. アンインストール
 
 ```
 /plugin uninstall honne

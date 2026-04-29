@@ -50,7 +50,28 @@ Scripts exit with code 71 if python3 is missing or below 3.9.
 
 ## Install
 
-### 1. Register the marketplace
+### Option 1 — `npx skills add` (recommended)
+
+Works with Claude Code, Cursor, Codex, Windsurf, and other skills.sh-compatible agents.
+
+```bash
+npx skills add jazz1x/honne                  # install into ./.claude/skills/ (project)
+npx skills add jazz1x/honne -g               # install into ~/.claude/skills/ (global, recommended for honne)
+npx skills add jazz1x/honne --list           # list skills before installing
+npx skills add jazz1x/honne --skill whoami   # install a single skill
+```
+
+Expected output:
+
+```
+✓ Installed jazz1x/honne — 5 skills (whoami, lexi, compare, persona, crush)
+```
+
+Global install (`-g`) is recommended — honne reads transcripts across all projects, so cross-project history makes self-observation richer.
+
+### Option 2 — Claude Code native plugin
+
+#### 1. Register the marketplace
 
 Inside a Claude Code session, run:
 
@@ -64,7 +85,7 @@ Expected output:
 ✓ Marketplace 'honne' added (1 plugin)
 ```
 
-### 2. Install the plugin
+#### 2. Install the plugin
 
 ```
 /plugin install honne --scope user
@@ -83,7 +104,7 @@ Scope options:
 | `--scope user` *(recommended)* | Installs into `~/.claude/` — honne can read transcripts across **all projects** | Normal use. Self-observation benefits from cross-project history. |
 | `--scope local` | Installs into the current project's `.claude/` only | Sandboxed trial, or when you intentionally want single-project scope. |
 
-### 3. Verify
+#### 3. Verify
 
 ```
 /plugin list
@@ -103,7 +124,7 @@ You should see `honne` in the list. If the slash commands below autocomplete, yo
 
 The `SessionEnd` hook is registered automatically — no extra configuration.
 
-### 4. Uninstall
+#### 4. Uninstall
 
 ```
 /plugin uninstall honne
