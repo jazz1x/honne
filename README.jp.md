@@ -2,7 +2,7 @@
 
 > Claude Code プラグイン — LLM トランスクリプトからの自己観察
 
-![version](https://img.shields.io/badge/version-0.0.3-blue)
+![version](https://img.shields.io/badge/version-0.0.4-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -94,7 +94,7 @@ Claude Code セッション内で実行:
 期待される出力:
 
 ```
-✓ Installed honne@0.0.3 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.4 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 スコープの選択:
@@ -303,6 +303,10 @@ bash tests/run.sh
 ```
 
 初回のみインストール — `brew install bats-core` (macOS) または `apt install bats` (Linux)。すべてのテストは一時的な `HOME` と `CLAUDE_PROJECT_DIR` サンドボックス内で実行され、実際の `~/.claude/` · `~/.honne/` には一切触れません。誤って実 HOME に着地した場合、[tests/setup.bash](tests/setup.bash) のガードが即座に abort します。
+
+## 規約
+
+本プラグインの全スキルが従う SSL frontmatter 規約は `docs/conventions/ssl-frontmatter.md` を参照してください。
 
 ## Footnote
 

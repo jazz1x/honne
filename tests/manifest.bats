@@ -95,6 +95,31 @@ assert not bad, bad
   [ "$status" -eq 0 ]
 }
 
+@test "every skill declares an ssl: frontmatter block (SSL convention)" {
+  # Sustainable gate: any new skill must declare its SSL frame in frontmatter
+  # so side effects, idempotency, and rollback are statically inspectable.
+  # See docs/conventions/ssl-frontmatter.md.
+  run python3 -c "
+import os
+root = '$REPO_ROOT/skills'
+bad = []
+for name in sorted(os.listdir(root)):
+    for fname in ('SKILL.md', 'SKILL.ko.md', 'SKILL.jp.md'):
+        path = os.path.join(root, name, fname)
+        if not os.path.isfile(path):
+            continue
+        fm = open(path).read(4000).split('---\n', 2)
+        if len(fm) < 2:
+            continue
+        body = fm[1]
+        for required in ('ssl:', 'scheduling:', 'structural:', 'logical:', 'side_effects:', 'idempotent:'):
+            if required not in body:
+                bad.append(f'{name}/{fname}: missing {required}')
+assert not bad, bad
+"
+  [ "$status" -eq 0 ]
+}
+
 @test "pre-commit rejects SKILL.md whose name contains a colon" {
   tmp="$(mktemp -d -t honne-colon-test-XXXXXX)"
   cp -R "$REPO_ROOT" "$tmp/repo"

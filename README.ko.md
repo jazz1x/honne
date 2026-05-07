@@ -2,7 +2,7 @@
 
 > Claude Code 플러그인 — LLM 트랜스크립트로부터의 자기 관찰
 
-![version](https://img.shields.io/badge/version-0.0.3-blue)
+![version](https://img.shields.io/badge/version-0.0.4-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -94,7 +94,7 @@ Claude Code 세션 안에서 실행:
 기대 출력:
 
 ```
-✓ Installed honne@0.0.3 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.4 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 스코프 선택:
@@ -303,6 +303,10 @@ bash tests/run.sh
 ```
 
 최초 1회 설치 — `brew install bats-core` (macOS) 또는 `apt install bats` (Linux). 모든 테스트는 임시 `HOME` 및 `CLAUDE_PROJECT_DIR` 샌드박스에서 실행되며, 실제 `~/.claude/` · `~/.honne/` 는 절대 건드리지 않습니다. 실수로 실제 HOME 에 착지하면 [tests/setup.bash](tests/setup.bash) 의 가드가 즉시 abort.
+
+## 컨벤션
+
+이 플러그인의 모든 스킬이 따르는 SSL frontmatter 컨벤션은 `docs/conventions/ssl-frontmatter.md` 를 참고하세요.
 
 ## Footnote
 

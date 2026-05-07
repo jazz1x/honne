@@ -1,9 +1,31 @@
 ---
 name: crush
-version: 0.0.3
+version: 0.0.4
 description: >
   Stage a live debate between your persona's antipattern and signature voices on a topic.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
+ssl:
+  scheduling:
+    anti_triggers:
+      - ".honne/personas/{antipattern,signature,judge}.md 모두 부재 시 (persona 먼저 실행)"
+  structural:
+    scenes:
+      - "Step 1: Get Topic"
+      - "Step 2: Validate Personas"
+      - "Step 3: Load Personas"
+      - "Step 4: Round 1 — Antipattern Attacks"
+      - "Step 5: Round 1+2 — Signature & Counter"
+      - "Step 6: Judge's Verdict"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/personas/*.md"
+      writes: []
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: null
 ---
 
 # honne — Personas Debate (Live)

@@ -1,10 +1,41 @@
 ---
 name: whoami
-version: 0.0.3
+version: 0.0.4
 description: >
   로컬 LLM 트랜스크립트에서 7축 자기관찰을 오케스트레이션합니다.
   자율 증거 수집 + LLM 합성 해설.
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
+ssl:
+  scheduling:
+    anti_triggers:
+      - "`.honne/persona.json` 이 이미 신선하고 새 transcript 가 없을 때 (compare 사용)"
+      - "단일 axis 만 필요한 경우 (lexi 사용)"
+  structural:
+    scenes:
+      - "Step 1: 범위+언어 HITL"
+      - "Step 2: 스캔"
+      - "Step 3: 거절 재구성 필터"
+      - "Step 4: 축별 자율 기록"
+      - "Step 5: LLM 해설 합성"
+      - "Step 6: 페르소나 및 보고서 렌더링"
+    resumable: true
+  logical:
+    side_effects:
+      reads:
+        - ".honne/cache/scan.json"
+        - ".honne/cache/axis-${axis}.json"
+      writes:
+        - ".honne/cache/scan.json  # overwrite"
+        - ".honne/cache/axis-${axis}.json  # overwrite"
+        - ".honne/assets/claims.jsonl  # append"
+        - ".honne/assets/rejections.jsonl  # append"
+        - ".honne/cache/narrative.json  # overwrite"
+        - ".honne/persona.json  # overwrite"
+        - "docs/honne.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: false
+    rollback: ".honne/assets/*.jsonl 의 마지막 RUN_ID 라인을 jq/grep 으로 수동 제거. .honne/ 와 docs/honne.md 는 .gitignore 대상이므로 git checkout 불가 — 실행 전 cp -r .honne .honne.bak 권장."
 ---
 
 # honne — 7축 자기관찰

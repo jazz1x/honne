@@ -1,10 +1,35 @@
 ---
 name: persona
-version: 0.0.3
+version: 0.0.4
 description: >
   アンチパターン × シグネチャ軸の葛藤合成。
   観測されたパターンから機能するペルソナプロンプトを生成します。
   Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+ssl:
+  scheduling:
+    anti_triggers:
+      - "`.honne/persona.json` が不在の場合 (whoami を先に実行)"
+  structural:
+    scenes:
+      - "Step 1: 言語 HITL"
+      - "Step 2: ロードと検証"
+      - "Step 3: 葛藤ペイロード構築"
+      - "Step 4: LLM 合成"
+      - "Step 5: ペルソナレンダリング"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/persona.json"
+      writes:
+        - ".honne/cache/persona-synthesis.json  # overwrite"
+        - ".honne/personas/antipattern.md  # overwrite"
+        - ".honne/personas/signature.md  # overwrite"
+        - ".honne/personas/judge.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: ".honne/personas/ は .gitignore 対象 — 実行前に cp -r .honne/personas .honne/personas.bak"
 ---
 
 # honne — ペルソナ合成

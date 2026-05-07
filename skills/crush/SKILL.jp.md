@@ -1,9 +1,31 @@
 ---
 name: crush
-version: 0.0.3
+version: 0.0.4
 description: >
   あなたのペルソナの二つの声(アンチパターン対シグネチャ)がトピックについて交わすライブディベート。
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
+ssl:
+  scheduling:
+    anti_triggers:
+      - ".honne/personas/{antipattern,signature,judge}.md がすべて不在の場合 (persona を先に実行)"
+  structural:
+    scenes:
+      - "Step 1: トピック取得"
+      - "Step 2: ペルソナ検証"
+      - "Step 3: ペルソナロード"
+      - "Step 4: ラウンド1 — アンチパターン攻撃"
+      - "Step 5: ラウンド1+ラウンド2 — シグネチャ & カウンター"
+      - "Step 6: 審判者の判決"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/personas/*.md"
+      writes: []
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: null
 ---
 
 # honne — ペルソナ討論（ライブ）

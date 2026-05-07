@@ -1,9 +1,31 @@
 ---
 name: crush
-version: 0.0.3
+version: 0.0.4
 description: >
   두 인격(비효율 vs 강점)이 주제를 두고 벌이는 라이브 토론.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
+ssl:
+  scheduling:
+    anti_triggers:
+      - ".honne/personas/{antipattern,signature,judge}.md 모두 부재 시 (persona 먼저 실행)"
+  structural:
+    scenes:
+      - "Step 1: 주제 획득"
+      - "Step 2: 인격 검증"
+      - "Step 3: 인격 로드"
+      - "Step 4: 1라운드 — 비효율 공격"
+      - "Step 5: 1라운드+2라운드 — 강점 & 반박"
+      - "Step 6: 심판자의 판결"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/personas/*.md"
+      writes: []
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: null
 ---
 
 # honne — 인격 토론 (실시간)
