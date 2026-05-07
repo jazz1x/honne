@@ -5,6 +5,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.0.4] — 2026-05-07
+
+SSL frontmatter convention applied to every skill. An audit of the existing v0.0.3 skills found that scheduling triggers, structural step boundaries, and logical side effects were buried in prose — readable by humans, but not statically inspectable. v0.0.4 lifts those contracts into the YAML frontmatter so reviewers (and any future tooling) can inspect them without reading the body.
+
+### Added
+
+- `docs/conventions/ssl-frontmatter.md` — canonical SSL (Scheduling–Structural–Logical) schema, 6-step migration guide, and anti-pattern catalog. English-only by intent (internal contract document; user-facing docs remain trilingual). References Schank & Abelson scripts theory and arXiv:2604.24026.
+- All 5 existing skills gained an `ssl:` frontmatter block declaring `scheduling.anti_triggers`, `structural.scenes` + `resumable`, and `logical.side_effects` + `idempotent` + `rollback`. Mirrored across `.ko.md` and `.jp.md` locales (15 SKILL files total).
+- `tests/manifest.bats` gate: every SKILL file (incl. ko/jp) declares an `ssl:` block with the 6 required keys (`ssl:`, `scheduling:`, `structural:`, `logical:`, `side_effects:`, `idempotent:`). New skills cannot regress the convention.
+
+### Changed
+
+- **`compare` skill body**: Step 6 header renamed `No writes` → `Asset immutability check`. The prior name implied global no-writes, but Step 5 writes `docs/honne-compare.md` — the rename clarifies the invariant only protects `.honne/assets/` and `.honne/persona.json`.
+- **`lexi` skill body**: monolithic 7-item numbered list restructured into explicit `## Step 1:` … `## Step 7:` headers. Step 1 now explicitly asks for both scope AND locale (previously only scope was asked, but `LOCALE` was used downstream as if it had been collected — silent contract violation surfaced by the audit).
+- All 5 existing skills bumped from `version: 0.0.3` to `0.0.4` across the three locales.
+- `plugin.json` version bumped `0.0.3` → `0.0.4`.
+- `scripts/honne_py/__init__.py` `__version__` bumped to `0.0.4`.
+- README badges and welcome line bumped to 0.0.4 (en / ko / jp).
+
+### Fixed (declared, not behavior changes)
+
+- **record-claim append-only behavior, now declared**: `record-claim` opens `claims.jsonl` / `rejections.jsonl` with mode `"a"` and includes `created_at` in `claim_id` so dedup never triggers. This was previously undocumented. Now declared as `idempotent: false` with a concrete rollback procedure in the frontmatter (`whoami`, `lexi`).
+- **gitignore-aware rollback strings**: `.honne/`, `docs/honne.md`, and `docs/honne-compare.md` are all `.gitignore`d, so any rollback advice that referenced `git checkout` would silently have been a no-op. Rollback strings now recommend `cp` backups before invocation.
+
+### Methodology note
+
+The audit was iterative. A first-pass review made factual claims about side effects, idempotency, and rollback paths. A self-correction pass against the actual repo state then caught 4 defects in that first pass — the most consequential being `git checkout` rollback advice on `.gitignore`d paths. The corrected findings were applied to the skills as the v0.0.4 frontmatter, the convention written up in `docs/conventions/ssl-frontmatter.md`, and a `manifest.bats` gate added so future skills can't regress. No new runtime tooling, no new skill, no new CLI surface — just the convention and the static gate.
+
+---
+
 ## [0.0.3] — 2026-04-28
 
 Production hardening: all 14 ralphi-identified issues resolved, 80+ new coverage tests, one real bug found and fixed in the process.

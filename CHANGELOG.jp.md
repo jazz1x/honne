@@ -1,5 +1,35 @@
 # 変更ログ
 
+## [0.0.4] — 2026-05-07
+
+すべてのスキルに SSL frontmatter コンベンションを適用しました。v0.0.3 のスキルを監査した結果、scheduling トリガー、structural ステップ境界、logical 副作用が本文の散文に埋もれており — 人間は読めても静的検査は不可能な状態でした。v0.0.4 はこれらの契約を YAML frontmatter に持ち上げ、本文を読まずともレビュアー (および将来のツール) が検査できるようにします。
+
+### 追加
+
+- `docs/conventions/ssl-frontmatter.md` — 正式 SSL (Scheduling–Structural–Logical) スキーマ、6 ステップのマイグレーションガイド、アンチパターンカタログ。英語版のみ (内部契約ドキュメントであり、user-facing の README/CHANGELOG のみトリリンガルを維持)。Schank & Abelson のスクリプト理論と arXiv:2604.24026 を参照します。
+- 既存 5 スキルに `ssl:` frontmatter ブロックを追加しました。`scheduling.anti_triggers`、`structural.scenes` + `resumable`、`logical.side_effects` + `idempotent` + `rollback` を宣言します。`.ko.md` / `.jp.md` ロケールにもミラーリング (合計 15 件の SKILL ファイル)。
+- `tests/manifest.bats` ゲート: すべての SKILL ファイル (ko/jp 含む) が `ssl:` ブロックと 6 件の必須キー (`ssl:`, `scheduling:`, `structural:`, `logical:`, `side_effects:`, `idempotent:`) を宣言することを検証します。新規スキルはコンベンションを退行させられません。
+
+### 変更
+
+- **`compare` スキル本体**: Step 6 ヘッダーを `No writes` → `Asset immutability check` にリネームしました。旧名はグローバル no-writes を示唆していましたが、Step 5 で `docs/honne-compare.md` を実際に書き込むため、保護対象が `.honne/assets/` と `.honne/persona.json` に限定される旨を明確化しました。
+- **`lexi` スキル本体**: モノリシックな 7 項目番号リスト構造を、明示的な `## Step 1:` 〜 `## Step 7:` ヘッダーへ再構造化しました。Step 1 で scope と locale を併せて尋ねるよう変更しました (従来は scope のみ尋ねながら `LOCALE` を以降の手順で収集済みのように使用していた、サイレントな契約違反を監査が指摘)。
+- 既存 5 スキルの `version` を 3 ロケール全体で `0.0.3` → `0.0.4` に更新しました。
+- `plugin.json` version `0.0.3` → `0.0.4`。
+- `scripts/honne_py/__init__.py` `__version__` を `0.0.4` へ更新。
+- README バッジと welcome 行を 0.0.4 に反映 (en / ko / jp)。
+
+### 修正 (宣言の補強 — 挙動変更ではない)
+
+- **record-claim append-only 挙動の明示化**: `record-claim` が `claims.jsonl` / `rejections.jsonl` を mode `"a"` で開き、`claim_id` に `created_at` を含めるため dedup が決して発火しない挙動が、これまで未記載でした。frontmatter に `idempotent: false` を宣言し、具体的な rollback 手順を記述しました (`whoami`, `lexi`)。
+- **gitignore を考慮した rollback 文字列**: `.honne/`、`docs/honne.md`、`docs/honne-compare.md` がいずれも `.gitignore` 対象であるため、`git checkout` を勧める rollback 助言は事実上 no-op でした。rollback 文字列は呼び出し前の `cp` バックアップを推奨する内容に修正しました。
+
+### 方法論ノート
+
+監査は反復的に進めました。1 パス目で副作用・冪等性・rollback 経路に関する事実主張をまとめ、2 パス目の自己検査でその 1 パス目から欠陥 4 件を — 最も影響の大きいものは `.gitignore` 対象パスに対する `git checkout` rollback の助言 — 検出しました。修正された結果を v0.0.4 frontmatter として適用し、コンベンションを `docs/conventions/ssl-frontmatter.md` にまとめ、今後の退行を防ぐ `manifest.bats` ゲートを追加しました。新ランタイムツールなし、新スキルなし、新 CLI 表面なし — コンベンションと静的ゲートのみ。
+
+---
+
 ## [0.0.3] — 2026-04-28
 
 プロダクション強化: ralphi 検査で特定した 14 件の問題を全件解決。カバレッジテスト 80+ 件追加。テスト作成中に実際のバグ 1 件を発見・修正。

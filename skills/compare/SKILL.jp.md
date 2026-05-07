@@ -1,9 +1,32 @@
 ---
 name: compare
-version: 0.0.3
+version: 0.0.4
 description: >
   資産のみの振り返り。トランスクリプト再スキャン、LLM再分析、HITL なし。
   Triggers: "compare", "review past", "what changed", "self retrospective".
+ssl:
+  scheduling:
+    anti_triggers:
+      - ".honne/assets/ が未生成または空のとき (whoami を先に実行)"
+  structural:
+    scenes:
+      - "Step 1: スコープ HITL"
+      - "Step 2: 資産の存在確認"
+      - "Step 3: 主張+進化のロード"
+      - "Step 4: 時間バケットグループ化"
+      - "Step 5: docs/honne-compare.md レンダリング"
+      - "Step 6: 資産不変性チェック"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/assets/*.jsonl"
+      writes:
+        - "docs/honne-compare.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: "docs/honne-compare.md は .gitignore 対象 — 実行前に cp バックアップまたは出力検証後に手動削除。"
 ---
 
 # compare — 読み取り専用振り返り
@@ -43,7 +66,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/query-assets.sh" \
 architecture PRD §4.2 compare Step 6 に従ってフォーマットします。
 ユーザーが「要約」を要求しない限り LLM なし — その場合でも引用制限のみ。
 
-## ステップ6: 書き込みなし
+## ステップ6: 資産不変性チェック
 
 このスキルは .honne/assets/ または .honne/persona.json に決して書き込むことはできません。
 検証 (テスト): assets/*.jsonl の stat -c %Y before/after 変更なし。

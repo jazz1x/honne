@@ -1,9 +1,32 @@
 ---
 name: compare
-version: 0.0.3
+version: 0.0.4
 description: >
   Asset-only retrospective. No transcript re-scan, no LLM re-analysis, no HITL.
   Triggers: "compare", "review past", "what changed", "self retrospective".
+ssl:
+  scheduling:
+    anti_triggers:
+      - ".honne/assets/ 미생성 또는 비어있을 때 (whoami 먼저 실행)"
+  structural:
+    scenes:
+      - "Step 1: Scope HITL"
+      - "Step 2: Assets presence check"
+      - "Step 3: Load claims+evolutions"
+      - "Step 4: Time-bucket grouping"
+      - "Step 5: Render docs/honne-compare.md"
+      - "Step 6: Asset immutability check"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/assets/*.jsonl"
+      writes:
+        - "docs/honne-compare.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: "docs/honne-compare.md 는 .gitignore 대상 — 실행 전 cp 백업 또는 출력 검증 후 수동 삭제."
 ---
 
 # compare — Read-only Retrospective
@@ -43,7 +66,7 @@ Group by axis × recorded_at bucket (YYYY-MM granularity for MVP).
 Format per architecture PRD §4.2 compare Step 6.
 No LLM unless the user asked for "summarize" — and even then, only cite-bound.
 
-## Step 6: No writes
+## Step 6: Asset immutability check
 
 This skill MUST NOT write to .honne/assets/ or .honne/persona.json.
 Verify (test): stat -c %Y on assets/*.jsonl before/after unchanged.

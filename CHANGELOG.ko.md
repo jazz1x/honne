@@ -1,5 +1,35 @@
 # 변경 로그
 
+## [0.0.4] — 2026-05-07
+
+모든 스킬에 SSL frontmatter 컨벤션을 적용했습니다. v0.0.3 스킬을 감사한 결과 scheduling 트리거, structural 단계 경계, logical 부작용이 본문 산문 안에 묻혀 있어 — 사람은 읽을 수 있어도 정적 검사는 불가능한 상태였습니다. v0.0.4는 이 계약들을 YAML frontmatter 로 끌어올려, 본문을 읽지 않고도 리뷰어(혹은 향후 도구)가 검사할 수 있도록 했습니다.
+
+### 추가
+
+- `docs/conventions/ssl-frontmatter.md` — 정식 SSL (Scheduling–Structural–Logical) 스키마, 6단계 마이그레이션 가이드, 안티패턴 카탈로그. 영문 단일본 (내부 계약 문서이며 user-facing 문서인 README/CHANGELOG 만 트라이링구얼 유지). Schank & Abelson 스크립트 이론과 arXiv:2604.24026 을 참고합니다.
+- 기존 5개 스킬에 `ssl:` frontmatter 블록을 추가했습니다. `scheduling.anti_triggers`, `structural.scenes` + `resumable`, `logical.side_effects` + `idempotent` + `rollback` 을 선언합니다. `.ko.md` / `.jp.md` 로케일에도 동일하게 미러링 (총 15개 SKILL 파일).
+- `tests/manifest.bats` 게이트: 모든 SKILL 파일(ko/jp 포함)이 `ssl:` 블록과 6개 필수 키 (`ssl:`, `scheduling:`, `structural:`, `logical:`, `side_effects:`, `idempotent:`) 를 선언함을 검증합니다. 신규 스킬은 컨벤션을 회귀시킬 수 없습니다.
+
+### 변경
+
+- **`compare` 스킬 본문**: Step 6 헤더를 `No writes` → `Asset immutability check` 로 변경했습니다. 기존 명칭은 전역 no-writes 를 시사했지만 Step 5 에서 `docs/honne-compare.md` 를 실제로 작성하므로, 보호 대상이 `.honne/assets/` 와 `.honne/persona.json` 에 한정된다는 점을 명확히 했습니다.
+- **`lexi` 스킬 본문**: 단일 7항목 번호 리스트 구조를 명시적인 `## Step 1:` … `## Step 7:` 헤더로 재구조화했습니다. Step 1 에서 scope 와 locale 을 함께 묻도록 변경했습니다 (기존에는 scope 만 물으면서 `LOCALE` 을 이후 단계에서 마치 수집된 것처럼 사용하던 침묵 계약 위반을 감사가 적발).
+- 기존 5개 스킬의 `version` 을 3개 로케일 모두 `0.0.3` → `0.0.4` 로 올렸습니다.
+- `plugin.json` version `0.0.3` → `0.0.4`.
+- `scripts/honne_py/__init__.py` `__version__` 을 `0.0.4` 로 갱신.
+- README 배지와 welcome 라인 0.0.4 반영 (en / ko / jp).
+
+### 수정 (선언 보강 — 동작 변경 아님)
+
+- **record-claim append-only 동작 명시화**: `record-claim` 이 `claims.jsonl` / `rejections.jsonl` 을 mode `"a"` 로 열고 `claim_id` 에 `created_at` 을 포함해 dedup 이 절대 트리거되지 않는 동작이 그동안 문서화되지 않았습니다. 이제 frontmatter 에 `idempotent: false` 로 선언하고 구체적인 rollback 절차를 명시했습니다 (`whoami`, `lexi`).
+- **gitignore 인지 rollback 문자열**: `.honne/`, `docs/honne.md`, `docs/honne-compare.md` 가 모두 `.gitignore` 대상이므로 `git checkout` 을 권하는 rollback 조언은 사실상 무효였습니다. rollback 문자열은 호출 전 `cp` 백업을 권장하도록 수정했습니다.
+
+### 방법론 노트
+
+감사는 반복적으로 진행되었습니다. 1차 패스에서 부작용·멱등성·롤백 경로에 대한 사실 주장을 정리했고, 2차 자기 검수 패스에서 1차의 결함 4건을 — 가장 큰 것은 `.gitignore` 대상 경로에 대한 `git checkout` 롤백 권고 — 적발했습니다. 정정된 결과를 v0.0.4 frontmatter 로 적용하고, 컨벤션을 `docs/conventions/ssl-frontmatter.md` 에 정리하고, 향후 회귀를 막는 `manifest.bats` 게이트를 추가했습니다. 신규 런타임 도구 없음, 신규 스킬 없음, 신규 CLI 표면 없음 — 컨벤션과 정적 게이트만.
+
+---
+
 ## [0.0.3] — 2026-04-28
 
 프로덕션 하드닝: ralphi 검수로 발견한 14개 이슈 전량 해결, 신규 커버리지 테스트 80+ 추가, 테스트 작성 과정에서 실제 버그 1건 발견·수정.

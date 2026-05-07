@@ -1,10 +1,35 @@
 ---
 name: persona
-version: 0.0.3
+version: 0.0.4
 description: >
   antipattern × signature 축의 갈등 합성.
   관찰된 패턴으로부터 작동하는 페르소나 프롬프트를 생성합니다.
   Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+ssl:
+  scheduling:
+    anti_triggers:
+      - "`.honne/persona.json` 부재 시 (whoami 먼저 실행)"
+  structural:
+    scenes:
+      - "Step 1: 언어 HITL"
+      - "Step 2: 로드 및 유효성 검증"
+      - "Step 3: 갈등 페이로드 구성"
+      - "Step 4: LLM 합성"
+      - "Step 5: 페르소나 렌더링"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/persona.json"
+      writes:
+        - ".honne/cache/persona-synthesis.json  # overwrite"
+        - ".honne/personas/antipattern.md  # overwrite"
+        - ".honne/personas/signature.md  # overwrite"
+        - ".honne/personas/judge.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: ".honne/personas/ 는 .gitignore 대상 — 실행 전 cp -r .honne/personas .honne/personas.bak"
 ---
 
 # honne — 페르소나 합성

@@ -1,10 +1,41 @@
 ---
 name: whoami
-version: 0.0.3
+version: 0.0.4
 description: >
   ローカルLLMトランスクリプトから7軸の自己観察を編成します。
   自律的な証拠収集 + LLM合成ナラティブ。
   Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
+ssl:
+  scheduling:
+    anti_triggers:
+      - "`.honne/persona.json` がすでに新鮮で新しい transcript がないとき (compare を使用)"
+      - "単一 axis のみ必要な場合 (lexi を使用)"
+  structural:
+    scenes:
+      - "Step 1: 範囲+言語 HITL"
+      - "Step 2: スキャン"
+      - "Step 3: 却下再フレーミングフィルタ"
+      - "Step 4: 軸ごとの自律的な記録"
+      - "Step 5: LLMナラティブ合成"
+      - "Step 6: ペルソナとレポートのレンダリング"
+    resumable: true
+  logical:
+    side_effects:
+      reads:
+        - ".honne/cache/scan.json"
+        - ".honne/cache/axis-${axis}.json"
+      writes:
+        - ".honne/cache/scan.json  # overwrite"
+        - ".honne/cache/axis-${axis}.json  # overwrite"
+        - ".honne/assets/claims.jsonl  # append"
+        - ".honne/assets/rejections.jsonl  # append"
+        - ".honne/cache/narrative.json  # overwrite"
+        - ".honne/persona.json  # overwrite"
+        - "docs/honne.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: false
+    rollback: ".honne/assets/*.jsonl の最後の RUN_ID 行を jq/grep で手動削除。.honne/ と docs/honne.md は .gitignore 対象のため git checkout 不可 — 実行前に cp -r .honne .honne.bak 推奨。"
 ---
 
 # honne — 7軸自己観察

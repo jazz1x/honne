@@ -1,10 +1,35 @@
 ---
 name: persona
-version: 0.0.3
+version: 0.0.4
 description: >
   Conflict synthesis from antipattern × signature axes.
   Generates a working persona prompt from your observed patterns.
   Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+ssl:
+  scheduling:
+    anti_triggers:
+      - "`.honne/persona.json` 부재 시 (whoami 먼저 실행)"
+  structural:
+    scenes:
+      - "Step 1: Locale HITL"
+      - "Step 2: Load and Validate"
+      - "Step 3: Build Conflict Payload"
+      - "Step 4: LLM Synthesis"
+      - "Step 5: Render Personas"
+    resumable: false
+  logical:
+    side_effects:
+      reads:
+        - ".honne/persona.json"
+      writes:
+        - ".honne/cache/persona-synthesis.json  # overwrite"
+        - ".honne/personas/antipattern.md  # overwrite"
+        - ".honne/personas/signature.md  # overwrite"
+        - ".honne/personas/judge.md  # overwrite"
+      deletes: []
+      network: []
+    idempotent: true
+    rollback: ".honne/personas/ 는 .gitignore 대상 — 실행 전 cp -r .honne/personas .honne/personas.bak"
 ---
 
 # honne — Persona Synthesis

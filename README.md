@@ -2,7 +2,7 @@
 
 > Claude Code plugin — self-observation from LLM transcripts
 
-![version](https://img.shields.io/badge/version-0.0.3-blue)
+![version](https://img.shields.io/badge/version-0.0.4-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -94,7 +94,7 @@ Expected output:
 Expected output:
 
 ```
-✓ Installed honne@0.0.3 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.4 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 Scope options:
@@ -306,6 +306,10 @@ bash tests/run.sh
 ```
 
 Install requirements once — `brew install bats-core` (macOS) or `apt install bats` (Linux). Every test executes inside an ephemeral sandbox `HOME` and `CLAUDE_PROJECT_DIR`; real `~/.claude/` and `~/.honne/` are never touched. See [tests/setup.bash](tests/setup.bash) for the guard that aborts if a test somehow lands on the real home.
+
+## Conventions
+
+See `docs/conventions/ssl-frontmatter.md` for the SSL frontmatter convention used by all skills in this plugin.
 
 ## Footnote
 
