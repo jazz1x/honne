@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.4
+version: 0.0.5
 description: >
   あなたのペルソナの二つの声(アンチパターン対シグネチャ)がトピックについて交わすライブディベート。
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".

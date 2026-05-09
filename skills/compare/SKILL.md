@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.0.4
+version: 0.0.5
 description: >
   Asset-only retrospective. No transcript re-scan, no LLM re-analysis, no HITL.
   Triggers: "compare", "review past", "what changed", "self retrospective".

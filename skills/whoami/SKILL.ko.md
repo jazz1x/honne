@@ -1,6 +1,6 @@
 ---
 name: whoami
-version: 0.0.4
+version: 0.0.5
 description: >
   로컬 LLM 트랜스크립트에서 7축 자기관찰을 오케스트레이션합니다.
   자율 증거 수집 + LLM 합성 해설.

@@ -1,6 +1,6 @@
 ---
 name: whoami
-version: 0.0.4
+version: 0.0.5
 description: >
   Orchestrate 7-axis self-observation from local LLM transcripts.
   Autonomous evidence gathering + LLM-synthesized narrative.

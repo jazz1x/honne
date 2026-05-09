@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.4
+version: 0.0.5
 description: >
   語彙軸スタンドアロン — 高頻度語彙、コード切り替え比率、オノマトペア抽出。
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".

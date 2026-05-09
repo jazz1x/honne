@@ -1,6 +1,6 @@
 ---
 name: persona
-version: 0.0.4
+version: 0.0.5
 description: >
   antipattern × signature 축의 갈등 합성.
   관찰된 패턴으로부터 작동하는 페르소나 프롬프트를 생성합니다.

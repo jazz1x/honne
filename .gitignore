@@ -8,6 +8,9 @@ docs/honne-compare.md
 # harnish 구현 상태 (자율 구현 중에만 존재, 독립성 원칙에 따라 commit 금지)
 .harnish/
 
+# galmuri audit 리포트 (로컬 진단)
+.galmuri/
+
 # macOS
 .DS_Store
 

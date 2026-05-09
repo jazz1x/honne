@@ -1,5 +1,34 @@
 # 変更ログ
 
+## [0.0.5] — 2026-05-10
+
+5 つのスキル全体に対する SSL audit 駆動のクリーンアップ。v0.0.4 が SSL 契約を frontmatter に持ち上げたのに対し、v0.0.5 は静的 audit が浮かび上がらせたギャップを埋めます — `tools` と `branches` がすべてのスキルで空、2 つのスキルにトリガーの substring 衝突、`compare` の `idempotent` が誤って宣言されていました。本文中で自己反復していた箇所も整理しています — 情報損失ゼロ。
+
+### 追加
+
+- `ssl.logical.tools` を 15 件の SKILL ファイル全体 (5 スキル × 3 ロケール) で宣言。各スキルが実際に呼び出すツール (`bash`, `python3`, `Read`, `Write`, `AskUserQuestion`) を反映。v0.0.4 ではすべてのスキルで欠落していた項目。
+- `ssl.structural.branches` を 15 件の SKILL ファイル全体で宣言。本文の散文に埋もれていた分岐条件 (例: `whoami` Step 4 の `insufficient_evidence → skip`、`persona` Step 4 の `conflict_present` 3-way、`crush` Step 2 の `all-0/all-66/mixed`) を一級の宣言に格上げ。
+- `.gitignore`: `.galmuri/` を追加 (audit レポートはローカル診断であり、ソースではない)。
+
+### 変更
+
+- **`crush` 本文 — Step 4-5 の重複削除**: 4 ターン討論 ("ペルソナプロンプト適用 → 2-3 文を生成 → ラベル") がほぼ同じ 4 段落で繰り返されていたものを、単一ルール + 4 行のシーケンス表に置き換え。ロケールあたり −9 lines、動作変化なし。
+- **`whoami` 本文 — `HARD RULE` + `IMPORTANT` の統合**: 隣接する 2 ブロックが同じ `/tmp` · heredoc 制約を異なる表現で 2 回繰り返していたものを、ロケールごとに単一の箇条書きリストに統合。
+- **トリガー substring 衝突の解消** (Scheduling layer):
+  - `whoami` トリガー `"honne"` → `"honne whoami"` — 単独の `"honne"` が `persona` の `"honne persona"` および `crush` の `"/honne:crush"` と substring マッチ。
+  - `persona` トリガーから `"who am I as Claude"` を削除 (`whoami` の `"who am I"` と substring 衝突); 解消した事実を `anti_trigger` で明示。
+- **`compare` — `idempotent: true` → `false`**: `summarize` 分岐で非決定的 LLM 呼び出しが発生するため、以前の宣言は不正確。rollback 文字列は元から正しい状態。
+- 5 つのスキル全てを `version: 0.0.4` → `0.0.5` に bump (3 ロケール)。
+- `plugin.json` バージョン `0.0.4` → `0.0.5`。
+- `scripts/honne_py/__init__.py` `__version__` → `0.0.5`。
+- README バッジおよび welcome 行を 0.0.5 に更新 (en / ko / jp)。
+
+### 修正
+
+- `compare` の idempotency 宣言が実動作と一致 (上記 Changed 参照)。以前は `idempotent: true` を信頼する audit ツールが `summarize` 分岐での安全な再実行を誤認する可能性があった。
+
+---
+
 ## [0.0.4] — 2026-05-07
 
 すべてのスキルに SSL frontmatter コンベンションを適用しました。v0.0.3 のスキルを監査した結果、scheduling トリガー、structural ステップ境界、logical 副作用が本文の散文に埋もれており — 人間は読めても静的検査は不可能な状態でした。v0.0.4 はこれらの契約を YAML frontmatter に持ち上げ、本文を読まずともレビュアー (および将来のツール) が検査できるようにします。

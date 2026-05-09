@@ -1,6 +1,6 @@
 ---
 name: whoami
-version: 0.0.4
+version: 0.0.5
 description: >
   ローカルLLMトランスクリプトから7軸の自己観察を編成します。
   自律的な証拠収集 + LLM合成ナラティブ。
