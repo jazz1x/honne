@@ -4,11 +4,12 @@ version: 0.0.4
 description: >
   Conflict synthesis from antipattern × signature axes.
   Generates a working persona prompt from your observed patterns.
-  Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+  Triggers: "persona", "activate persona", "honne persona".
 ssl:
   scheduling:
     anti_triggers:
       - "`.honne/persona.json` 부재 시 (whoami 먼저 실행)"
+      - "`who am I` 입력 시 — whoami 와 substring 충돌, whoami 우선"
   structural:
     scenes:
       - "Step 1: Locale HITL"
@@ -16,8 +17,15 @@ ssl:
       - "Step 3: Build Conflict Payload"
       - "Step 4: LLM Synthesis"
       - "Step 5: Render Personas"
+    branches:
+      - "Step 2: persona check exit 66 → halt with whoami suggestion"
+      - "Step 2: STALE_DAYS > threshold → warn + continue"
+      - "Step 4: conflict_present=true → 2 personas + judge"
+      - "Step 4: conflict_present=false, 1 axis null → 1 persona, judge=null"
+      - "Step 4: conflict_present=false, both null → all persona fields null"
     resumable: false
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/persona.json"

@@ -16,8 +16,12 @@ ssl:
       - "Step 4: Time-bucket grouping"
       - "Step 5: Render docs/honne-compare.md"
       - "Step 6: Asset immutability check"
+    branches:
+      - "Step 2: assets dir absent or empty → print 'No assets yet' + exit 0"
+      - "Step 5: user requested 'summarize' → cite-bound LLM pass (otherwise pure render)"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/assets/*.jsonl"
@@ -25,7 +29,7 @@ ssl:
         - "docs/honne-compare.md  # overwrite"
       deletes: []
       network: []
-    idempotent: true
+    idempotent: false  # summarize branch invokes non-deterministic LLM
     rollback: "docs/honne-compare.md 는 .gitignore 대상 — 실행 전 cp 백업 또는 출력 검증 후 수동 삭제."
 ---
 

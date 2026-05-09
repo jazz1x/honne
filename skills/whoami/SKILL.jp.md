@@ -4,7 +4,7 @@ version: 0.0.4
 description: >
   ローカルLLMトランスクリプトから7軸の自己観察を編成します。
   自律的な証拠収集 + LLM合成ナラティブ。
-  Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
+  Triggers: "who am I", "self profile", "profile me", "honne whoami", "whoami self".
 ssl:
   scheduling:
     anti_triggers:
@@ -18,8 +18,14 @@ ssl:
       - "Step 4: 軸ごとの自律的な記録"
       - "Step 5: LLMナラティブ合成"
       - "Step 6: ペルソナとレポートのレンダリング"
+    branches:
+      - "Step 2: scan exit non-zero → stdout+stderr をそのまま出力後に停止"
+      - "Step 3: validate exit 3 (overlap) → 軸 skip + 'reframed' ログ"
+      - "Step 4: insufficient_evidence true → 軸 skip、次へ進行"
+      - "ユーザーが候補に 'n' で応答 → 拒否を記録"
     resumable: true
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"
@@ -102,9 +108,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --out ".honne/assets/claims.jsonl"
 ```
 
-**強制ルール**: `/tmp` に中間データを書き込まないでください。`/tmp` に書き込みたい衝動に駆られた場合は、代わりに `.honne/cache/` を使用してください。`/tmp` への書き込みは SKILL.md 契約違反です — テストスイートがこれをキャッチします。
-
-**重要**: 各 `bash` ブロックを直接シェルコマンドとして実行します。`/tmp` に書き込まないでください、シェル heredoc (`<< 'EOF'`) を使用しないでください、コマンドをスクリプトファイルにバンドルしないでください。インラインコマンドのみを実行してください。
+**強制ルール** — 実行制約 (テストスイートが強制):
+- 各 `bash` ブロックは直接シェルコマンドとして実行 — heredoc (`<< 'EOF'`)・スクリプトファイル・コマンドバンドリング禁止。
+- 中間データを `/tmp` に書き込まない — `.honne/cache/` を使用。`/tmp` への書き込みは SKILL.md 契約違反。
 
 ## ステップ5: LLMナラティブ合成
 

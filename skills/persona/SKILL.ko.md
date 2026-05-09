@@ -4,11 +4,12 @@ version: 0.0.4
 description: >
   antipattern × signature 축의 갈등 합성.
   관찰된 패턴으로부터 작동하는 페르소나 프롬프트를 생성합니다.
-  Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+  Triggers: "persona", "activate persona", "honne persona".
 ssl:
   scheduling:
     anti_triggers:
       - "`.honne/persona.json` 부재 시 (whoami 먼저 실행)"
+      - "`who am I` 입력 시 — whoami 와 substring 충돌, whoami 우선"
   structural:
     scenes:
       - "Step 1: 언어 HITL"
@@ -16,8 +17,15 @@ ssl:
       - "Step 3: 갈등 페이로드 구성"
       - "Step 4: LLM 합성"
       - "Step 5: 페르소나 렌더링"
+    branches:
+      - "Step 2: persona check exit 66 → whoami 안내 후 중지"
+      - "Step 2: STALE_DAYS > 임계값 → 경고 + 계속"
+      - "Step 4: conflict_present=true → 두 페르소나 + 심판자"
+      - "Step 4: conflict_present=false, 한 축만 null → 페르소나 1개, judge=null"
+      - "Step 4: conflict_present=false, 양 축 null → 모든 페르소나 필드 null"
     resumable: false
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/persona.json"

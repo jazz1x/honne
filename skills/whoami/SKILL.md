@@ -4,7 +4,7 @@ version: 0.0.4
 description: >
   Orchestrate 7-axis self-observation from local LLM transcripts.
   Autonomous evidence gathering + LLM-synthesized narrative.
-  Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
+  Triggers: "who am I", "self profile", "profile me", "honne whoami", "whoami self".
 ssl:
   scheduling:
     anti_triggers:
@@ -18,8 +18,14 @@ ssl:
       - "Step 4: Per-axis autonomous record"
       - "Step 5: LLM narrative synthesis"
       - "Step 6: Render persona and report"
+    branches:
+      - "Step 2: scan exit non-zero → output stdout+stderr verbatim, halt"
+      - "Step 3: validate exit 3 (overlap) → skip axis + log 'reframed'"
+      - "Step 4: insufficient_evidence true → skip axis, continue"
+      - "User responds 'n' on candidate → record rejection"
     resumable: true
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"
@@ -103,9 +109,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --out ".honne/assets/claims.jsonl"
 ```
 
-**HARD RULE**: Do NOT write any intermediate data to `/tmp`. If you feel compelled to write to `/tmp`, use `.honne/cache/` instead. Writing to `/tmp` is a SKILL.md contract violation — the test suite will catch it.
-
-**IMPORTANT**: Execute each `bash` block as a direct shell command. Do NOT write to `/tmp`, do NOT use shell heredocs (`<< 'EOF'`), do NOT bundle commands into a script file. Run inline commands only.
+**HARD RULE** — execution constraints (test suite enforces):
+- Each `bash` block runs as a direct shell command — no heredocs (`<< 'EOF'`), no script files, no command bundling.
+- No intermediate writes to `/tmp` — use `.honne/cache/` instead. Writing to `/tmp` is a SKILL.md contract violation.
 
 ## Step 5: LLM narrative synthesis
 

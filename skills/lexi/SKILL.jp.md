@@ -17,8 +17,13 @@ ssl:
       - "Step 5: HITL 受諾/拒否/編集"
       - "Step 6: 主張記録"
       - "Step 7: 過去の拒否確認"
+    branches:
+      - "Step 5: y → Step 6 主張記録"
+      - "Step 5: n → 拒否記録後に終了"
+      - "Step 5: edit → ユーザー修正テキスト → Step 6 主張記録"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"
