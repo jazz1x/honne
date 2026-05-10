@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.0.4
+version: 0.0.5
 description: >
   자산 전용 회고. 트랜스크립트 재스캔, LLM 재분석, HITL 없음.
   Triggers: "compare", "review past", "what changed", "self retrospective".
@@ -16,8 +16,12 @@ ssl:
       - "Step 4: 시간 버킷 그룹화"
       - "Step 5: docs/honne-compare.md 렌더링"
       - "Step 6: 자산 불변성 검사"
+    branches:
+      - "Step 2: 자산 디렉터리 부재/비어있음 → 'No assets yet' 출력 + exit 0"
+      - "Step 5: 사용자가 '요약' 요청 → 인용 제한 LLM 패스 (그 외에는 순수 렌더)"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/assets/*.jsonl"
@@ -25,7 +29,7 @@ ssl:
         - "docs/honne-compare.md  # overwrite"
       deletes: []
       network: []
-    idempotent: true
+    idempotent: false  # 요약 분기에서 비결정적 LLM 호출
     rollback: "docs/honne-compare.md 는 .gitignore 대상 — 실행 전 cp 백업 또는 출력 검증 후 수동 삭제."
 ---
 

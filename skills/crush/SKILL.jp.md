@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.4
+version: 0.0.5
 description: >
   あなたのペルソナの二つの声(アンチパターン対シグネチャ)がトピックについて交わすライブディベート。
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
@@ -16,8 +16,14 @@ ssl:
       - "Step 4: ラウンド1 — アンチパターン攻撃"
       - "Step 5: ラウンド1+ラウンド2 — シグネチャ & カウンター"
       - "Step 6: 審判者の判決"
+    branches:
+      - "Step 1: skill_args が空 → プレーンテキスト質問"
+      - "Step 2: 3つすべて exit 0 → 進行"
+      - "Step 2: 3つすべて exit 66 → persona 案内後に停止"
+      - "Step 2: 混在 → whoami+persona 案内後に停止"
     resumable: false
   logical:
+    tools: ["bash", "Read"]
     side_effects:
       reads:
         - ".honne/personas/*.md"

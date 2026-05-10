@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.0.4
+version: 0.0.5
 description: >
   資産のみの振り返り。トランスクリプト再スキャン、LLM再分析、HITL なし。
   Triggers: "compare", "review past", "what changed", "self retrospective".
@@ -16,8 +16,12 @@ ssl:
       - "Step 4: 時間バケットグループ化"
       - "Step 5: docs/honne-compare.md レンダリング"
       - "Step 6: 資産不変性チェック"
+    branches:
+      - "Step 2: 資産ディレクトリ不在/空 → 'No assets yet' 出力 + exit 0"
+      - "Step 5: ユーザーが「summarize」要求 → 引用限定 LLM パス (それ以外は純粋レンダ)"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/assets/*.jsonl"
@@ -25,7 +29,7 @@ ssl:
         - "docs/honne-compare.md  # overwrite"
       deletes: []
       network: []
-    idempotent: true
+    idempotent: false  # summarize 分岐で非決定的 LLM 呼び出し
     rollback: "docs/honne-compare.md は .gitignore 対象 — 実行前に cp バックアップまたは出力検証後に手動削除。"
 ---
 

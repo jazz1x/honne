@@ -1,10 +1,10 @@
 ---
 name: whoami
-version: 0.0.4
+version: 0.0.5
 description: >
   로컬 LLM 트랜스크립트에서 7축 자기관찰을 오케스트레이션합니다.
   자율 증거 수집 + LLM 합성 해설.
-  Triggers: "who am I", "self profile", "profile me", "honne", "whoami self".
+  Triggers: "who am I", "self profile", "profile me", "honne whoami", "whoami self".
 ssl:
   scheduling:
     anti_triggers:
@@ -18,8 +18,14 @@ ssl:
       - "Step 4: 축별 자율 기록"
       - "Step 5: LLM 해설 합성"
       - "Step 6: 페르소나 및 보고서 렌더링"
+    branches:
+      - "Step 2: scan exit non-zero → stdout+stderr 그대로 출력 후 중지"
+      - "Step 3: validate exit 3 (overlap) → 축 skip + 'reframed' 로그"
+      - "Step 4: insufficient_evidence true → 축 skip, 다음으로 진행"
+      - "사용자가 후보에 'n' 응답 → 거절 기록"
     resumable: true
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"
@@ -102,9 +108,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/honne" record claim \
   --out ".honne/assets/claims.jsonl"
 ```
 
-**강제 규칙**: `/tmp`에 중간 데이터를 쓰지 마세요. `/tmp`에 쓰고 싶은 충동이 느껴지면 대신 `.honne/cache/`를 사용하세요. `/tmp`에 쓰는 것은 SKILL.md 계약 위반입니다 — 테스트 스위트가 이를 감지합니다.
-
-**중요**: 각 `bash` 블록을 직접 셸 명령으로 실행하세요. `/tmp`에 쓰지 마세요, 셸 heredoc(`<< 'EOF'`)을 사용하지 마세요, 명령을 스크립트 파일로 번들링하지 마세요. 인라인 명령만 실행하세요.
+**강제 규칙** — 실행 제약 (테스트 스위트가 강제):
+- 각 `bash` 블록은 직접 셸 명령으로 실행 — heredoc(`<< 'EOF'`)·스크립트 파일·명령 번들링 금지.
+- 중간 데이터를 `/tmp` 에 쓰지 말 것 — `.honne/cache/` 사용. `/tmp` 쓰기는 SKILL.md 계약 위반.
 
 ## 5단계: LLM 해설 합성
 

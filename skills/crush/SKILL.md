@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.4
+version: 0.0.5
 description: >
   Stage a live debate between your persona's antipattern and signature voices on a topic.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
@@ -16,8 +16,14 @@ ssl:
       - "Step 4: Round 1 — Antipattern Attacks"
       - "Step 5: Round 1+2 — Signature & Counter"
       - "Step 6: Judge's Verdict"
+    branches:
+      - "Step 1: skill_args empty → ask plain-text question"
+      - "Step 2: all 3 exit 0 → proceed"
+      - "Step 2: all 3 exit 66 → halt with persona suggestion"
+      - "Step 2: mixed → halt with whoami+persona suggestion"
     resumable: false
   logical:
+    tools: ["bash", "Read"]
     side_effects:
       reads:
         - ".honne/personas/*.md"

@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.4
+version: 0.0.5
 description: >
   어휘 축 독립형 — 고빈도 어휘, 코드 스위칭 비율, 의성어 추출.
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".
@@ -17,8 +17,13 @@ ssl:
       - "Step 5: HITL 수락/거절/수정"
       - "Step 6: 주장 기록"
       - "Step 7: 과거 거절 확인"
+    branches:
+      - "Step 5: y → Step 6 주장 기록"
+      - "Step 5: n → 거절 기록 후 종료"
+      - "Step 5: edit → 사용자 수정 텍스트 → Step 6 주장 기록"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"

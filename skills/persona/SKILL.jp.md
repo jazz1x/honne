@@ -1,14 +1,15 @@
 ---
 name: persona
-version: 0.0.4
+version: 0.0.5
 description: >
   アンチパターン × シグネチャ軸の葛藤合成。
   観測されたパターンから機能するペルソナプロンプトを生成します。
-  Triggers: "persona", "activate persona", "who am I as Claude", "honne persona".
+  Triggers: "persona", "activate persona", "honne persona".
 ssl:
   scheduling:
     anti_triggers:
       - "`.honne/persona.json` が不在の場合 (whoami を先に実行)"
+      - "`who am I` 入力時 — whoami と substring 衝突、whoami 優先"
   structural:
     scenes:
       - "Step 1: 言語 HITL"
@@ -16,8 +17,15 @@ ssl:
       - "Step 3: 葛藤ペイロード構築"
       - "Step 4: LLM 合成"
       - "Step 5: ペルソナレンダリング"
+    branches:
+      - "Step 2: persona check exit 66 → whoami 案内後に停止"
+      - "Step 2: STALE_DAYS > 閾値 → 警告 + 続行"
+      - "Step 4: conflict_present=true → 2ペルソナ + 審判者"
+      - "Step 4: conflict_present=false, 1軸 null → ペルソナ 1個、judge=null"
+      - "Step 4: conflict_present=false, 両軸 null → 全ペルソナフィールド null"
     resumable: false
   logical:
+    tools: ["AskUserQuestion", "bash", "python3", "Read", "Write"]
     side_effects:
       reads:
         - ".honne/persona.json"

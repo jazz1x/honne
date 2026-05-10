@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.0.5] — 2026-05-10
+
+SSL audit-driven cleanup of all 5 skills. v0.0.4 lifted the SSL contracts into the frontmatter; v0.0.5 closes the gaps the static auditor surfaced — `tools` and `branches` were left empty across the board, two skills had trigger substring collisions, and `compare` was wrongly declared idempotent. Body prose was also tightened where it repeated itself, with zero information loss.
+
+### Added
+
+- `ssl.logical.tools` declared on all 15 SKILL files (5 skills × 3 locales). Reflects the actual tool surface each skill calls (`bash`, `python3`, `Read`, `Write`, `AskUserQuestion`). Was missing on every skill in v0.0.4.
+- `ssl.structural.branches` declared on all 15 SKILL files. Branch conditions previously buried in body prose (e.g. `whoami` Step 4 `insufficient_evidence → skip`, `persona` Step 4 `conflict_present` 3-way, `crush` Step 2 `all-0/all-66/mixed`) are now first-class declarations the auditor can inspect.
+- `.gitignore`: `.galmuri/` (audit reports are local diagnostics, not source).
+
+### Changed
+
+- **`whoami` body — `HARD RULE` + `IMPORTANT` consolidation**: two adjacent blocks restated the same `/tmp` and heredoc constraints in different words. Merged into one bullet list per locale.
+- **Trigger collisions resolved** (Scheduling layer):
+  - `whoami` trigger `"honne"` → `"honne whoami"` — the bare `"honne"` was a substring match of `persona`'s `"honne persona"` and `crush`'s `"/honne:crush"`.
+  - `persona` dropped trigger `"who am I as Claude"` (substring of `whoami`'s `"who am I"`); added an `anti_trigger` documenting the resolution.
+- **`compare` — `idempotent: true` → `false`**: the `summarize` branch invokes a non-deterministic LLM pass, so the previous declaration was inaccurate. Rollback string was already correct.
+- All 5 skills bumped from `version: 0.0.4` to `0.0.5` across the three locales.
+- `plugin.json` version bumped `0.0.4` → `0.0.5`.
+- `scripts/honne_py/__init__.py` `__version__` bumped to `0.0.5`.
+- README badges and welcome line bumped to 0.0.5 (en / ko / jp).
+
+### Fixed
+
+- `compare` declared idempotency now matches actual behavior (see Changed above). Previously, an auditor relying on `idempotent: true` would have wrongly assumed safe re-execution under the `summarize` branch.
+
+---
+
 ## [0.0.4] — 2026-05-07
 
 SSL frontmatter convention applied to every skill. An audit of the existing v0.0.3 skills found that scheduling triggers, structural step boundaries, and logical side effects were buried in prose — readable by humans, but not statically inspectable. v0.0.4 lifts those contracts into the YAML frontmatter so reviewers (and any future tooling) can inspect them without reading the body.

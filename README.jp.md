@@ -2,7 +2,7 @@
 
 > Claude Code プラグイン — LLM トランスクリプトからの自己観察
 
-![version](https://img.shields.io/badge/version-0.0.4-blue)
+![version](https://img.shields.io/badge/version-0.0.5-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![claude-code](https://img.shields.io/badge/claude--code-plugin-purple)
 
@@ -94,7 +94,7 @@ Claude Code セッション内で実行:
 期待される出力:
 
 ```
-✓ Installed honne@0.0.4 — 5 skills registered (whoami, lexi, compare, persona, crush)
+✓ Installed honne@0.0.5 — 5 skills registered (whoami, lexi, compare, persona, crush)
 ```
 
 スコープの選択:

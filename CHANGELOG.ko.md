@@ -1,5 +1,33 @@
 # 변경 로그
 
+## [0.0.5] — 2026-05-10
+
+5개 스킬 전체에 SSL audit 결과 반영. v0.0.4 가 SSL 계약을 frontmatter 로 끌어올렸다면, v0.0.5 는 정적 audit 가 발견한 누락을 메웁니다 — `tools` 와 `branches` 가 모든 스킬에서 비어있었고, 두 스킬은 트리거 substring 충돌이 있었으며, `compare` 는 `idempotent` 가 잘못 선언되어 있었습니다. 본문 산문에서 자기 반복되는 부분도 정리했습니다 — 정보 손실 0.
+
+### 추가
+
+- `ssl.logical.tools` 를 15 개 SKILL 파일 전체 (5 스킬 × 3 로케일) 에 선언. 각 스킬이 실제 호출하는 도구 (`bash`, `python3`, `Read`, `Write`, `AskUserQuestion`) 를 반영. v0.0.4 에서는 모든 스킬에 누락되어 있던 항목.
+- `ssl.structural.branches` 를 15 개 SKILL 파일 전체에 선언. 본문 산문에 묻혀 있던 분기 조건 (예: `whoami` Step 4 의 `insufficient_evidence → skip`, `persona` Step 4 의 `conflict_present` 3-way, `crush` Step 2 의 `all-0/all-66/mixed`) 을 1급 선언으로 격상.
+- `.gitignore`: `.galmuri/` 추가 (audit 리포트는 로컬 진단물이며 소스가 아님).
+
+### 변경
+
+- **`whoami` 본문 — `HARD RULE` + `IMPORTANT` 통합**: 인접한 두 블록이 같은 `/tmp` · heredoc 제약을 다른 표현으로 두 번 말하던 것을 단일 불릿 리스트로 통합 (로케일별).
+- **트리거 substring 충돌 해소** (Scheduling layer):
+  - `whoami` 트리거 `"honne"` → `"honne whoami"` — 단독 `"honne"` 가 `persona` 의 `"honne persona"` 및 `crush` 의 `"/honne:crush"` 와 substring 매치.
+  - `persona` 트리거에서 `"who am I as Claude"` 제거 (`whoami` 의 `"who am I"` 와 substring 충돌); 해소 사실을 `anti_trigger` 로 명시.
+- **`compare` — `idempotent: true` → `false`**: `summarize` 분기에서 비결정적 LLM 호출이 발생하므로 이전 선언이 부정확했음. rollback 문자열은 이미 올바른 상태.
+- 5개 스킬 모두 `version: 0.0.4` → `0.0.5` (3 로케일).
+- `plugin.json` 버전 `0.0.4` → `0.0.5`.
+- `scripts/honne_py/__init__.py` `__version__` → `0.0.5`.
+- README 배지 및 welcome 라인 0.0.5 로 갱신 (en / ko / jp).
+
+### 수정
+
+- `compare` 의 idempotency 선언이 실제 동작과 일치 (위 변경 항목 참조). 이전에는 `idempotent: true` 를 신뢰하는 감사 도구가 `summarize` 분기에서 안전한 재실행을 오인할 수 있었음.
+
+---
+
 ## [0.0.4] — 2026-05-07
 
 모든 스킬에 SSL frontmatter 컨벤션을 적용했습니다. v0.0.3 스킬을 감사한 결과 scheduling 트리거, structural 단계 경계, logical 부작용이 본문 산문 안에 묻혀 있어 — 사람은 읽을 수 있어도 정적 검사는 불가능한 상태였습니다. v0.0.4는 이 계약들을 YAML frontmatter 로 끌어올려, 본문을 읽지 않고도 리뷰어(혹은 향후 도구)가 검사할 수 있도록 했습니다.

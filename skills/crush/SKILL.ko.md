@@ -1,6 +1,6 @@
 ---
 name: crush
-version: 0.0.4
+version: 0.0.5
 description: >
   두 인격(비효율 vs 강점)이 주제를 두고 벌이는 라이브 토론.
   Triggers: "crush", "debate personas", "personas fight", "/honne:crush".
@@ -16,8 +16,14 @@ ssl:
       - "Step 4: 1라운드 — 비효율 공격"
       - "Step 5: 1라운드+2라운드 — 강점 & 반박"
       - "Step 6: 심판자의 판결"
+    branches:
+      - "Step 1: skill_args 비어있음 → 일반 텍스트 질문"
+      - "Step 2: 세 개 모두 exit 0 → 진행"
+      - "Step 2: 세 개 모두 exit 66 → persona 안내 후 중지"
+      - "Step 2: 혼합 → whoami+persona 안내 후 중지"
     resumable: false
   logical:
+    tools: ["bash", "Read"]
     side_effects:
       reads:
         - ".honne/personas/*.md"

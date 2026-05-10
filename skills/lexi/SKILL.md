@@ -1,6 +1,6 @@
 ---
 name: lexi
-version: 0.0.4
+version: 0.0.5
 description: >
   Lexicon axis standalone — extract high-frequency vocabulary, code-switching ratio, onomatopoeia.
   Triggers: "my vocabulary", "lexicon", "word habits", "speech patterns".
@@ -17,8 +17,13 @@ ssl:
       - "Step 5: HITL accept/reject/edit"
       - "Step 6: Record claim"
       - "Step 7: Check past rejections"
+    branches:
+      - "Step 5: y → Step 6 record claim"
+      - "Step 5: n → record rejection, halt"
+      - "Step 5: edit → user-revised text → Step 6 record claim"
     resumable: false
   logical:
+    tools: ["bash"]
     side_effects:
       reads:
         - ".honne/cache/scan.json"
