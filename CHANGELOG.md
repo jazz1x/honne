@@ -17,7 +17,6 @@ SSL audit-driven cleanup of all 5 skills. v0.0.4 lifted the SSL contracts into t
 
 ### Changed
 
-- **`crush` body — Step 4-5 deduplication**: the four-turn debate ("apply persona prompt → produce 2-3 sentences → label") was repeated as four near-identical paragraphs. Replaced with a single rule + 4-row sequence table. −9 lines per locale, behavior unchanged.
 - **`whoami` body — `HARD RULE` + `IMPORTANT` consolidation**: two adjacent blocks restated the same `/tmp` and heredoc constraints in different words. Merged into one bullet list per locale.
 - **Trigger collisions resolved** (Scheduling layer):
   - `whoami` trigger `"honne"` → `"honne whoami"` — the bare `"honne"` was a substring match of `persona`'s `"honne persona"` and `crush`'s `"/honne:crush"`.

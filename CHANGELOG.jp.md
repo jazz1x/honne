@@ -12,7 +12,6 @@
 
 ### 変更
 
-- **`crush` 本文 — Step 4-5 の重複削除**: 4 ターン討論 ("ペルソナプロンプト適用 → 2-3 文を生成 → ラベル") がほぼ同じ 4 段落で繰り返されていたものを、単一ルール + 4 行のシーケンス表に置き換え。ロケールあたり −9 lines、動作変化なし。
 - **`whoami` 本文 — `HARD RULE` + `IMPORTANT` の統合**: 隣接する 2 ブロックが同じ `/tmp` · heredoc 制約を異なる表現で 2 回繰り返していたものを、ロケールごとに単一の箇条書きリストに統合。
 - **トリガー substring 衝突の解消** (Scheduling layer):
   - `whoami` トリガー `"honne"` → `"honne whoami"` — 単独の `"honne"` が `persona` の `"honne persona"` および `crush` の `"/honne:crush"` と substring マッチ。

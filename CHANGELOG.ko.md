@@ -12,7 +12,6 @@
 
 ### 변경
 
-- **`crush` 본문 — Step 4-5 중복 제거**: 4턴 토론 ("페르소나 프롬프트 적용 → 2-3 문장 생성 → 라벨") 이 거의 같은 4 문단으로 반복되어 있던 것을 단일 규칙 + 4 행 시퀀스 표로 교체. 로케일당 −9 lines, 동작 변화 없음.
 - **`whoami` 본문 — `HARD RULE` + `IMPORTANT` 통합**: 인접한 두 블록이 같은 `/tmp` · heredoc 제약을 다른 표현으로 두 번 말하던 것을 단일 불릿 리스트로 통합 (로케일별).
 - **트리거 substring 충돌 해소** (Scheduling layer):
   - `whoami` 트리거 `"honne"` → `"honne whoami"` — 단독 `"honne"` 가 `persona` 의 `"honne persona"` 및 `crush` 의 `"/honne:crush"` 와 substring 매치.

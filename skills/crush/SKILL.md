@@ -75,20 +75,35 @@ Read all three files into your mental context:
 
 Extract the `name` from each by reading the first `# Name` line after the header.
 
-## Step 4–5: Debate (4 turns)
+## Step 4: Round 1 — Antipattern Attacks
 
-For each turn: apply the named persona's system prompt mentally, produce 2-3 sentences, prefix with the label.
+Apply `.honne/personas/antipattern.md` system prompt mentally.
 
-| # | Persona | Stance        | Label                          |
-|---|---------|---------------|--------------------------------|
-| 1 | antipattern | open attack on TOPIC          | `**[antipattern — {name}]**` |
-| 2 | signature   | rebuttal to turn 1            | `**[signature — {name}]**`   |
-| 3 | antipattern | counter-rebuttal to turn 2    | `**[antipattern — {name}]**` |
-| 4 | signature   | closing argument              | `**[signature — {name}]**`   |
+Produce a 2-3 sentence attack on TOPIC from the antipattern perspective.
+
+Label output: `**[antipattern — {name}]**` followed by the attack.
+
+## Step 5: Round 1 + Round 2 — Signature & Counter
+
+Apply `.honne/personas/signature.md` system prompt.
+
+Produce a 2-3 sentence rebuttal to antipattern's attack.
+
+Label: `**[signature — {name}]**` followed by the rebuttal.
+
+Then, back to antipattern perspective: 2-3 sentence counter-rebuttal.
+
+Label: `**[antipattern — {name}]**` followed by the counter.
+
+Then, back to signature perspective: 2-3 sentence closing argument.
+
+Label: `**[signature — {name}]**` followed by the closing.
 
 ## Step 6: Judge's Verdict
 
-Apply `.honne/personas/judge.md` system prompt. Produce a 2-3 sentence verdict: which approach is more situationally appropriate, and why.
+Apply `.honne/personas/judge.md` system prompt.
+
+Produce a 2-3 sentence verdict: which approach is more situationally appropriate, and why.
 
 Label: `**[Verdict]**` followed by the verdict.
 
